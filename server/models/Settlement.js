@@ -4,26 +4,28 @@ const settlementSchema = mongoose.Schema(
   {
     group: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Group"
+      ref: "Group",
+      required: true,
     },
 
+    // ✅ stored as name strings since group members have no _id
     fromUser: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      type: String,
+      required: true,
     },
 
     toUser: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      type: String,
+      required: true,
     },
 
     amount: {
       type: Number,
-      required: true
-    }
+      required: true,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 

@@ -1,60 +1,61 @@
 import mongoose from "mongoose";
 
+const participantSchema = new mongoose.Schema({
+  // ✅ store name as string — group members have no _id
+  user: {
+    type: String,
+    required: true,
+  },
+  share: {
+    type: Number,
+    required: true,
+  },
+});
+
 const expenseSchema = mongoose.Schema(
   {
     group: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Group"
+      ref: "Group",
     },
 
     title: {
       type: String,
-      required: true
+      required: true,
     },
 
     amount: {
       type: Number,
-      required: true
+      required: true,
     },
 
     category: {
-      type: String
+      type: String,
     },
 
+    // ✅ store paidBy as name string — group members have no _id
     paidBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      type: String,
     },
 
-    participants: [
-      {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User"
-        },
-
-        share: {
-          type: Number
-        }
-      }
-    ],
+    participants: [participantSchema],
 
     receipt: {
-      type: String
+      type: String,
     },
 
     notes: {
-      type: String
+      type: String,
     },
 
     status: {
       type: String,
       enum: ["Pending", "Settled"],
-      default: "Pending"
-    }
+      default: "Pending",
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
