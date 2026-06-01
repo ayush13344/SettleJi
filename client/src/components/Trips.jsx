@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { QRCodeSVG as QRCode } from "qrcode.react";
 
-const API = "http://localhost:5000/api";
+const API = "https://settleji.onrender.com/api";
 
 /* ── MINI DONUT ── */
 function MiniDonut({ pct, color, bg = "#F5EFE6", size = 56, stroke = 7 }) {

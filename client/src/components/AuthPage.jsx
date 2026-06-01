@@ -60,9 +60,9 @@ export default function AuthPage() {
       setLoading(true);
 
       const { data } = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        loginData
-      );
+  "https://settleji.onrender.com/api/auth/login",
+  loginData
+);
 
       console.log("LOGIN RESPONSE:", data);
 
@@ -127,7 +127,7 @@ export default function AuthPage() {
       }
 
       const { data } = await axios.post(
-        "http://localhost:5000/api/auth/register",
+        "https://settleji.onrender.com/api/auth/register",
         formData,
         {
           headers: {

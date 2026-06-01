@@ -362,7 +362,7 @@ export default function ExpensePage() {
   const fetchGroup = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(`http://localhost:5000/api/groups/${groupId}`, {
+      const { data } = await axios.get(`https://settleji.onrender.com/api/groups/${groupId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const gd = data.group || data;
@@ -516,7 +516,7 @@ Rules:
 
       console.log("PAYLOAD:", JSON.stringify(payload, null, 2));
 
-      await axios.post("http://localhost:5000/api/expenses", payload, {
+      await axios.post("https://settleji.onrender.com/api/expenses", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

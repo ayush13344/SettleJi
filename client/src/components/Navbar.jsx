@@ -524,7 +524,7 @@ function App() {
     user?.avatar?.startsWith("http")
       ? user.avatar
       : user?.avatar
-      ? `http://localhost:5000/${user.avatar}`
+      ? `https://settleji.onrender.com/${user.avatar}`
       : "https://i.pravatar.cc/100"
   }
   className="profile-image"
@@ -543,7 +543,7 @@ function App() {
     user?.avatar?.startsWith("http")
       ? user.avatar
       : user?.avatar
-      ? `http://localhost:5000/${user.avatar}`
+      ? `https://settleji.onrender.com/${user.avatar}`
       : "https://i.pravatar.cc/100"
   }
   className="profile-image"

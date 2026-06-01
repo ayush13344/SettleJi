@@ -408,7 +408,7 @@ export default function GroupForm() {
 
       if (coverImage) formData.append("coverImage", coverImage);
 
-      const { data } = await axios.post("http://localhost:5000/api/groups", formData, {
+      const { data } = await axios.post("https://settleji.onrender.com/api/groups", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
