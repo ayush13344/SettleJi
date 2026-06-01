@@ -42,7 +42,7 @@ export const createGroup = async (req, res) => {
       "https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=600&q=80";
 
     if (req.file) {
-      imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+      imageUrl = `https://settleji.onrender.com/uploads/${req.file.filename}`;
     }
 
     // ===============================
