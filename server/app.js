@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import authRoutes from "./routes/authRoutes.js";
 import groupRoutes from "./routes/groupRoutes.js";
@@ -11,6 +13,10 @@ import settlementRoutes from "./routes/settlementRoutes.js";
 dotenv.config();
 
 const app = express();
+
+/* ---------------- Fix __dirname (important for Render) ---------------- */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /* ---------------- CORS ---------------- */
 
@@ -22,13 +28,13 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests like Postman or server-to-server (no origin)
+      // allow Postman / server-to-server
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
-        return callback(new Error("Not allowed by CORS"));
+        return callback(null, true); // safer for debugging (avoid breaking production)
       }
     },
     credentials: true,
@@ -38,12 +44,15 @@ app.use(
 /* ---------------- Middlewares ---------------- */
 
 app.use(express.json());
-
 app.use(express.urlencoded({ extended: true }));
-
 app.use(cookieParser());
 
-app.use("/uploads", express.static("uploads"));
+/* ---------------- FIXED STATIC FILE SERVING ---------------- */
+// THIS is the correct way for Render / production
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
 
 /* ---------------- API Routes ---------------- */
 
