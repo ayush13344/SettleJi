@@ -22,9 +22,9 @@ function App() {
       localStorage.getItem("userInfo")
     );
 
-    if (userInfo) {
-      setUser(userInfo.user);
-    }
+   if (userInfo) {
+  setUser(userInfo);
+}
   }, []);
 
   // CLOSE DROPDOWN ON OUTSIDE CLICK
@@ -503,7 +503,7 @@ function App() {
                 <button
                   className="cta-btn"
                   onClick={() =>
-                    navigate("/")
+                    navigate("/auth")
                   }
                 >
                   Login
@@ -519,35 +519,40 @@ function App() {
                       setShowMenu(!showMenu)
                     }
                   >
-                    <img
-                      src={
-                        user.avatar ||
-                        "https://i.pravatar.cc/100"
-                      }
-                      alt=""
-                      className="profile-image"
-                    />
+                  <img
+  src={
+    user?.avatar?.startsWith("http")
+      ? user.avatar
+      : user?.avatar
+      ? `http://localhost:5000/${user.avatar}`
+      : "https://i.pravatar.cc/100"
+  }
+  className="profile-image"
+/>
 
                     <div className="profile-name">
-                      {user.name}
-                    </div>
+  {user?.name}
+</div>
                   </div>
 
                   {showMenu && (
                     <div className="dropdown-menu">
                       <div className="dropdown-user">
-                        <img
-                          src={
-                            user.avatar ||
-                            "https://i.pravatar.cc/100"
-                          }
-                          alt=""
-                        />
+                      <img
+  src={
+    user?.avatar?.startsWith("http")
+      ? user.avatar
+      : user?.avatar
+      ? `http://localhost:5000/${user.avatar}`
+      : "https://i.pravatar.cc/100"
+  }
+  className="profile-image"
+/>
 
                         <div>
-                          <h3>{user.name}</h3>
+                         <h3>{user?.name}</h3>
 
-                          <p>{user.email}</p>
+<p>{user?.email}</p>
                         </div>
                       </div>
 

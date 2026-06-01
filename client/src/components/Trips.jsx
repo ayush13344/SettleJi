@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import QRCode from "https://esm.sh/qrcode.react@3.1.0";
+import { QRCodeSVG as QRCode } from "qrcode.react";
 
 const API = "http://localhost:5000/api";
 
@@ -50,10 +50,10 @@ function CategoryDonut({ data, size = 120 }) {
 }
 
 /* ── QR MODAL ── */
-function QRModal({ payer, amount, onClose }) {
+function QRModal({ payer, amount, totalAmount, splitAmong, onClose }) {
   if (!payer) return null;
 
-  // UPI deep link — pre-fills amount so scanner sees exact amount to pay
+  // ✅ UPI deep link with per-person share pre-filled
   const upiUrl = payer.upiId
     ? `upi://pay?pa=${encodeURIComponent(payer.upiId)}&pn=${encodeURIComponent(payer.name)}&am=${amount}&cu=INR&tn=SplitTrip%20Payment`
     : null;
@@ -66,52 +66,71 @@ function QRModal({ payer, amount, onClose }) {
     }} onClick={onClose}>
       <div style={{
         background:"#fff", borderRadius:28, padding:"32px 28px",
-        maxWidth:360, width:"100%", textAlign:"center",
+        maxWidth:380, width:"100%", textAlign:"center",
         boxShadow:"0 24px 64px rgba(0,0,0,.2)",
         animation:"popIn .25s ease",
       }} onClick={e => e.stopPropagation()}>
 
         <style>{`@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}`}</style>
 
-        {/* avatar */}
+        {/* payer avatar */}
         <div style={{
-          width:60, height:60, borderRadius:"50%",
+          width:64, height:64, borderRadius:"50%",
           background: payer.color || "#7C3AED",
           display:"flex", alignItems:"center", justifyContent:"center",
-          color:"#fff", fontSize:20, fontWeight:900,
+          color:"#fff", fontSize:22, fontWeight:900,
           margin:"0 auto 12px", fontFamily:"Outfit,sans-serif",
           boxShadow:"0 4px 16px rgba(0,0,0,.15)",
         }}>
           {payer.initials}
         </div>
 
-        <div style={{fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:"#1C1917", marginBottom:4}}>
-          {payer.name}
+        <div style={{fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:"#1C1917", marginBottom:2}}>
+          Pay {payer.name}
         </div>
-        <div style={{fontSize:13, color:"#94a3b8", fontWeight:600, marginBottom:4}}>
+        <div style={{fontSize:13, color:"#94a3b8", fontWeight:600, marginBottom:16}}>
           Paid for this expense
         </div>
+
+        {/* ✅ per-person amount prominently */}
         <div style={{
-          fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:900,
-          color:"#4f46e5", marginBottom:20,
+          background:"linear-gradient(135deg,#4f46e5,#7c3aed)",
+          borderRadius:16, padding:"16px 20px", marginBottom:16,
+          display:"flex", alignItems:"center", justifyContent:"space-between",
         }}>
-          ₹{amount}
+          <div style={{textAlign:"left"}}>
+            <div style={{fontSize:11, fontWeight:700, color:"rgba(255,255,255,.7)", letterSpacing:".8px", textTransform:"uppercase", marginBottom:4}}>
+              Your Share
+            </div>
+            <div style={{fontFamily:"'Fraunces',serif", fontSize:34, fontWeight:900, color:"#fff", lineHeight:1}}>
+              ₹{amount}
+            </div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:11, fontWeight:700, color:"rgba(255,255,255,.7)", marginBottom:4}}>Total Bill</div>
+            <div style={{fontSize:16, fontWeight:800, color:"rgba(255,255,255,.85)"}}>₹{totalAmount}</div>
+            <div style={{fontSize:11, color:"rgba(255,255,255,.6)", marginTop:2}}>
+              split among {splitAmong}
+            </div>
+          </div>
         </div>
 
         {upiUrl ? (
           <>
             <div style={{
               background:"#f8f7ff", borderRadius:20, padding:16,
-              display:"inline-block", marginBottom:16,
+              display:"inline-block", marginBottom:12,
               border:"2px solid #e8e4ff",
             }}>
-              <QRCode value={upiUrl} size={180} level="M"
+              <QRCode
+                value={upiUrl}
+                size={180} level="M"
                 fgColor="#1C1917" bgColor="#f8f7ff"
                 style={{display:"block"}}
               />
             </div>
             <div style={{fontSize:12, color:"#64748b", fontWeight:600, marginBottom:6}}>
-              Scan with any UPI app to pay
+              Scan with any UPI app to pay ₹{amount}
             </div>
             <div style={{
               fontSize:11, color:"#94a3b8", fontWeight:500,
@@ -142,7 +161,7 @@ function QRModal({ payer, amount, onClose }) {
           fontFamily:"Outfit,sans-serif", fontSize:14, fontWeight:800,
           cursor:"pointer", boxShadow:"0 6px 18px rgba(79,70,229,.35)",
         }}>
-          Close
+          Done
         </button>
       </div>
     </div>
@@ -342,11 +361,20 @@ export default function Trips() {
 
   const handlePayerClick = (expense) => {
     const member = findPayerMember(expense.paidBy);
+
+    // ✅ amount to pay = per-person share of this expense
+    // use saved participant share if available, else divide equally
+    const participantCount = expense.participants?.length || group?.members?.length || 1;
+    const perPersonShare   = expense.participants?.[0]?.share
+      ?? Math.round(expense.amount / participantCount);
+
     setQrModal({
       payer: member
         ? { name: member.name, initials: member.initials, color: member.color, upiId: member.upiId }
         : { name: expense.paidBy || "Unknown", initials: (expense.paidBy||"?")[0], color:"#7c3aed", upiId:"" },
-      amount: expense.amount,
+      amount:     perPersonShare,
+      totalAmount: expense.amount,
+      splitAmong:  participantCount,
     });
   };
 
@@ -364,7 +392,15 @@ export default function Trips() {
       <style>{css}</style>
 
       {/* ✅ QR Modal */}
-      {qrModal && <QRModal payer={qrModal.payer} amount={qrModal.amount} onClose={() => setQrModal(null)}/>}
+      {qrModal && (
+        <QRModal
+          payer={qrModal.payer}
+          amount={qrModal.amount}
+          totalAmount={qrModal.totalAmount}
+          splitAmong={qrModal.splitAmong}
+          onClose={() => setQrModal(null)}
+        />
+      )}
 
       <div className="trips-root">
 
