@@ -112,10 +112,29 @@ export const fetchGroups = async (req, res) => {
       createdAt: -1,
     });
 
+    const fixedGroups = groups.map((group) => {
+      const obj = group.toObject();
+
+      if (
+        obj.coverImage &&
+        obj.coverImage.includes(
+          "http://localhost:5000"
+        )
+      ) {
+        obj.coverImage =
+          obj.coverImage.replace(
+            "http://localhost:5000",
+            "https://settleji.onrender.com"
+          );
+      }
+
+      return obj;
+    });
+
     res.status(200).json({
       success: true,
-      total: groups.length,
-      groups,
+      total: fixedGroups.length,
+      groups: fixedGroups,
     });
   } catch (error) {
     console.log(error);

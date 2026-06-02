@@ -440,7 +440,7 @@ export default function GroupForm() {
             </svg>
             Back to Groups
           </button>
-          <div className="nav-brand">✈️ SplitTrip</div>
+          <div className="nav-brand">✈️ SettleJi</div>
           <div className="nav-actions">
             <button className="btn-cancel">Cancel</button>
             <button className="btn-create" onClick={handleCreateGroup} disabled={loading}>

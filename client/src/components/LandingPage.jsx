@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 function App() {
   const [activeFeature, setActiveFeature] = useState(0);
@@ -1138,10 +1139,12 @@ function App() {
             </p>
 
             <div className="hero-actions">
+              <Link href="/groups" >
               <button className="btn-primary">
                 Start Free Trip
                 <div className="arrow-box">→</div>
               </button>
+              </Link>
               <button className="btn-ghost">
                 <div className="play-icon">▶</div>
                 Watch Demo
