@@ -1,133 +1,564 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const navItems = ["Features", "Trips", "Analytics", "Pricing"];
-
 function App() {
-  const navigate    = useNavigate();
+  const navigate = useNavigate();
+
   const dropdownRef = useRef(null);
+
   const [showMenu, setShowMenu] = useState(false);
-  const [user,     setUser]     = useState(null);
+
+  const [user, setUser] = useState(null);
+
+  const navItems = [
+    "Features",
+    "Trips",
+    "Analytics",
+    "Pricing",
+  ];
 
   useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    if (userInfo) setUser(userInfo);
+    const userInfo = JSON.parse(
+      localStorage.getItem("userInfo")
+    );
+
+   if (userInfo) {
+  setUser(userInfo);
+}
   }, []);
 
-  // Close dropdown on outside click
+  // CLOSE DROPDOWN ON OUTSIDE CLICK
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(
+          event.target
+        )
+      ) {
         setShowMenu(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("userInfo");
+
     setUser(null);
+
     navigate("/");
   };
 
-  const avatarSrc = user?.avatar?.startsWith("http")
-    ? user.avatar
-    : user?.avatar
-    ? `https://settleji.onrender.com/${user.avatar}`
-    : "https://i.pravatar.cc/100";
-
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .dropdown-animate { animation: fadeIn 0.25s ease; }
-      `}</style>
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-      <div className="w-full relative overflow-x-hidden">
+          *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+          }
 
-        {/* background blobs */}
-        <div className="absolute w-80 h-80 bg-violet-300 rounded-full -top-28 -left-28 blur-[100px] opacity-50 pointer-events-none" />
-        <div className="absolute w-80 h-80 bg-pink-300  rounded-full -top-24 -right-28 blur-[100px] opacity-40 pointer-events-none" />
+          body{
+            font-family:'Inter',sans-serif;
+            background:#f6f7fb;
+            min-height:100vh;
+            overflow-x:hidden;
+          }
 
-        {/* ── NAVBAR ── */}
-        <div className="w-full flex justify-center pt-6 relative z-50 px-3 sm:px-0">
-          <div className="flex items-center justify-between gap-5 px-4 py-3
-                          bg-white/65 backdrop-blur-[22px]
-                          border border-white/50 rounded-full
-                          shadow-[0_10px_30px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.7)]
-                          transition-transform duration-300 hover:-translate-y-0.5
-                          flex-wrap sm:flex-nowrap w-full sm:w-auto
-                          sm:rounded-full rounded-[28px]">
+          .app{
+            width:100%;
+            position:relative;
+          }
 
-            {/* LEFT — logo */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-[42px] h-[42px] rounded-2xl bg-gradient-to-br from-violet-600 via-pink-500 to-amber-400 flex items-center justify-center text-white text-lg font-extrabold shadow-[0_8px_18px_rgba(124,58,237,0.25)] flex-shrink-0">
+          /* BACKGROUND */
+
+          .bg-blur-1{
+            position:absolute;
+            width:320px;
+            height:320px;
+            background:#c4b5fd;
+            border-radius:50%;
+            top:-120px;
+            left:-120px;
+            filter:blur(100px);
+            opacity:0.5;
+          }
+
+          .bg-blur-2{
+            position:absolute;
+            width:320px;
+            height:320px;
+            background:#f9a8d4;
+            border-radius:50%;
+            top:-100px;
+            right:-120px;
+            filter:blur(100px);
+            opacity:0.4;
+          }
+
+          /* NAVBAR */
+
+          .navbar-wrapper{
+            width:100%;
+            display:flex;
+            justify-content:center;
+            padding-top:24px;
+            position:relative;
+            z-index:100;
+          }
+
+          .dynamic-island{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+
+            gap:22px;
+
+            padding:12px 16px;
+
+            background:rgba(255,255,255,0.65);
+
+            backdrop-filter:blur(22px);
+
+            border:1px solid rgba(255,255,255,0.5);
+
+            border-radius:999px;
+
+            box-shadow:
+              0 10px 30px rgba(0,0,0,0.06),
+              inset 0 1px 1px rgba(255,255,255,0.7);
+
+            transition:0.3s ease;
+          }
+
+          .dynamic-island:hover{
+            transform:translateY(-2px);
+          }
+
+          /* LEFT */
+
+          .logo-section{
+            display:flex;
+            align-items:center;
+            gap:10px;
+          }
+
+          .logo-icon{
+            width:42px;
+            height:42px;
+
+            border-radius:14px;
+
+            background:linear-gradient(
+              135deg,
+              #7c3aed,
+              #ec4899,
+              #f59e0b
+            );
+
+            display:flex;
+            align-items:center;
+            justify-content:center;
+
+            color:white;
+
+            font-size:18px;
+            font-weight:800;
+
+            box-shadow:
+              0 8px 18px rgba(124,58,237,0.25);
+          }
+
+          .logo-text h2{
+            font-size:16px;
+            font-weight:800;
+            color:#111827;
+            line-height:1;
+          }
+
+          .logo-text p{
+            font-size:11px;
+            color:#6b7280;
+            margin-top:3px;
+          }
+
+          /* CENTER */
+
+          .nav-links{
+            display:flex;
+            align-items:center;
+            gap:6px;
+          }
+
+          .nav-item{
+            padding:10px 16px;
+
+            border-radius:999px;
+
+            font-size:13px;
+            font-weight:600;
+
+            color:#374151;
+
+            cursor:pointer;
+
+            transition:0.25s ease;
+          }
+
+          .nav-item:hover{
+            background:white;
+            color:#7c3aed;
+
+            box-shadow:
+              0 5px 15px rgba(0,0,0,0.05);
+          }
+
+          /* RIGHT */
+
+          .nav-right{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            position:relative;
+          }
+
+          .notification{
+            width:40px;
+            height:40px;
+
+            border-radius:50%;
+
+            background:white;
+
+            display:flex;
+            align-items:center;
+            justify-content:center;
+
+            font-size:15px;
+
+            cursor:pointer;
+
+            box-shadow:
+              0 5px 15px rgba(0,0,0,0.05);
+
+            transition:0.3s;
+          }
+
+          .notification:hover{
+            transform:scale(1.06);
+          }
+
+          /* LOGIN BUTTON */
+
+          .cta-btn{
+            border:none;
+
+            padding:12px 18px;
+
+            border-radius:999px;
+
+            background:linear-gradient(
+              135deg,
+              #7c3aed,
+              #ec4899
+            );
+
+            color:white;
+
+            font-size:13px;
+            font-weight:700;
+
+            cursor:pointer;
+
+            box-shadow:
+              0 8px 18px rgba(124,58,237,0.25);
+
+            transition:0.3s;
+          }
+
+          .cta-btn:hover{
+            transform:translateY(-2px);
+          }
+
+          /* PROFILE */
+
+          .profile-dropdown{
+            position:relative;
+          }
+
+          .profile-wrapper{
+            display:flex;
+            align-items:center;
+            gap:10px;
+
+            padding:4px 12px 4px 4px;
+
+            border-radius:999px;
+
+            background:white;
+
+            box-shadow:
+              0 5px 15px rgba(0,0,0,0.05);
+
+            cursor:pointer;
+
+            transition:0.3s;
+          }
+
+          .profile-wrapper:hover{
+            transform:translateY(-2px);
+          }
+
+          .profile-image{
+            width:38px;
+            height:38px;
+            border-radius:50%;
+            object-fit:cover;
+          }
+
+          .profile-name{
+            font-size:13px;
+            font-weight:700;
+            color:#111827;
+          }
+
+          /* DROPDOWN */
+
+          .dropdown-menu{
+            position:absolute;
+            top:65px;
+            right:0;
+
+            width:220px;
+
+            background:white;
+
+            border-radius:22px;
+
+            padding:18px;
+
+            box-shadow:
+              0 15px 40px rgba(0,0,0,0.08);
+
+            border:1px solid #f1f1f1;
+
+            animation:fadeIn 0.25s ease;
+          }
+
+          @keyframes fadeIn{
+            from{
+              opacity:0;
+              transform:translateY(10px);
+            }
+
+            to{
+              opacity:1;
+              transform:translateY(0);
+            }
+          }
+
+          .dropdown-user{
+            display:flex;
+            align-items:center;
+            gap:12px;
+
+            padding-bottom:16px;
+            border-bottom:1px solid #f1f1f1;
+          }
+
+          .dropdown-user img{
+            width:48px;
+            height:48px;
+            border-radius:50%;
+            object-fit:cover;
+          }
+
+          .dropdown-user h3{
+            font-size:15px;
+            color:#111827;
+          }
+
+          .dropdown-user p{
+            font-size:12px;
+            color:#6b7280;
+            margin-top:4px;
+          }
+
+          .logout-btn{
+            margin-top:16px;
+
+            width:100%;
+            height:46px;
+
+            border:none;
+
+            border-radius:14px;
+
+            background:#ef4444;
+
+            color:white;
+
+            font-weight:700;
+
+            cursor:pointer;
+
+            transition:0.3s;
+          }
+
+          .logout-btn:hover{
+            background:#dc2626;
+          }
+
+          /* MOBILE */
+
+          @media(max-width:900px){
+
+            .dynamic-island{
+              flex-wrap:wrap;
+              justify-content:center;
+              gap:14px;
+              padding:18px;
+              border-radius:28px;
+              width:92%;
+            }
+          }
+
+          @media(max-width:600px){
+
+            .navbar-wrapper{
+              padding-inline:12px;
+            }
+
+            .nav-links{
+              flex-wrap:wrap;
+              justify-content:center;
+            }
+
+            .dynamic-island{
+              padding:16px;
+            }
+          }
+        `}
+      </style>
+
+      <div className="app">
+        <div className="bg-blur-1"></div>
+
+        <div className="bg-blur-2"></div>
+
+        {/* NAVBAR */}
+
+        <div className="navbar-wrapper">
+          <div className="dynamic-island">
+            {/* LEFT */}
+
+            <div className="logo-section">
+              <div className="logo-icon">
                 S
               </div>
-              <div>
-                <h2 className="text-base font-extrabold text-gray-900 leading-none">SettleJi</h2>
-                <p className="text-[11px] text-gray-500 mt-0.5">AI Expense Platform</p>
+
+              <div className="logo-text">
+                <h2>SettleJi</h2>
+
+                <p>AI Expense Platform</p>
               </div>
             </div>
 
-            {/* CENTER — nav links */}
-            <div className="flex items-center gap-1.5 flex-wrap justify-center">
+            {/* CENTER */}
+
+            <div className="nav-links">
               {navItems.map((item, index) => (
                 <div
+                  className="nav-item"
                   key={index}
-                  className="px-4 py-2.5 rounded-full text-[13px] font-semibold text-gray-700 cursor-pointer transition-all duration-200 hover:bg-white hover:text-violet-600 hover:shadow-[0_5px_15px_rgba(0,0,0,0.05)]"
                 >
                   {item}
                 </div>
               ))}
             </div>
 
-            {/* RIGHT — actions */}
-            <div className="flex items-center gap-2.5 relative">
+            {/* RIGHT */}
 
-              {/* Notification bell */}
-              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[15px] cursor-pointer shadow-[0_5px_15px_rgba(0,0,0,0.05)] transition-transform duration-300 hover:scale-105">
+            <div className="nav-right">
+              <div className="notification">
                 🔔
               </div>
 
               {!user ? (
                 <button
-                  onClick={() => navigate("/auth")}
-                  className="border-none px-[18px] py-3 rounded-full bg-gradient-to-br from-violet-600 to-pink-500 text-white text-[13px] font-bold cursor-pointer shadow-[0_8px_18px_rgba(124,58,237,0.25)] transition-transform duration-300 hover:-translate-y-0.5"
+                  className="cta-btn"
+                  onClick={() =>
+                    navigate("/auth")
+                  }
                 >
                   Login
                 </button>
               ) : (
-                <div className="relative" ref={dropdownRef}>
-
-                  {/* Profile pill */}
+                <div
+                  className="profile-dropdown"
+                  ref={dropdownRef}
+                >
                   <div
-                    onClick={() => setShowMenu(prev => !prev)}
-                    className="flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-full bg-white shadow-[0_5px_15px_rgba(0,0,0,0.05)] cursor-pointer transition-transform duration-300 hover:-translate-y-0.5"
+                    className="profile-wrapper"
+                    onClick={() =>
+                      setShowMenu(!showMenu)
+                    }
                   >
-                    <img src={avatarSrc} alt="avatar" className="w-[38px] h-[38px] rounded-full object-cover" />
-                    <span className="text-[13px] font-bold text-gray-900">{user?.name}</span>
+                  <img
+  src={
+    user?.avatar?.startsWith("http")
+      ? user.avatar
+      : user?.avatar
+      ? `https://settleji.onrender.com/${user.avatar}`
+      : "https://i.pravatar.cc/100"
+  }
+  className="profile-image"
+/>
+
+                    <div className="profile-name">
+  {user?.name}
+</div>
                   </div>
 
-                  {/* Dropdown */}
                   {showMenu && (
-                    <div className="dropdown-animate absolute top-[65px] right-0 w-56 bg-white rounded-[22px] p-[18px] shadow-[0_15px_40px_rgba(0,0,0,0.08)] border border-gray-100 z-50">
-                      <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-                        <img src={avatarSrc} alt="avatar" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                    <div className="dropdown-menu">
+                      <div className="dropdown-user">
+                      <img
+  src={
+    user?.avatar?.startsWith("http")
+      ? user.avatar
+      : user?.avatar
+      ? `https://settleji.onrender.com/${user.avatar}`
+      : "https://i.pravatar.cc/100"
+  }
+  className="profile-image"
+/>
+
                         <div>
-                          <h3 className="text-[15px] font-semibold text-gray-900">{user?.name}</h3>
-                          <p className="text-xs text-gray-500 mt-1">{user?.email}</p>
+                         <h3>{user?.name}</h3>
+
+<p>{user?.email}</p>
                         </div>
                       </div>
+
                       <button
+                        className="logout-btn"
                         onClick={handleLogout}
-                        className="mt-4 w-full h-[46px] border-none rounded-2xl bg-red-500 text-white font-bold cursor-pointer transition-colors duration-300 hover:bg-red-600"
                       >
                         Logout
                       </button>
