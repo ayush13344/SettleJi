@@ -9,885 +9,337 @@ export default function AuthPage() {
   const [preview, setPreview] = useState("https://i.pravatar.cc/300");
   const [loading, setLoading] = useState(false);
 
-  const [loginData, setLoginData] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    firstName: "", lastName: "", email: "", password: "", confirmPassword: "",
   });
-
   const [image, setImage] = useState(null);
 
-  // ================= IMAGE =================
-
+  // ── IMAGE ──
   const handleImage = (e) => {
     const file = e.target.files[0];
-
-    if (file) {
-      setImage(file);
-      setPreview(URL.createObjectURL(file));
-    }
+    if (file) { setImage(file); setPreview(URL.createObjectURL(file)); }
   };
 
-  // ================= INPUT CHANGES =================
+  // ── INPUT CHANGES ──
+  const handleLoginChange  = (e) => setLoginData({ ...loginData,   [e.target.name]: e.target.value });
+  const handleSignupChange = (e) => setSignupData({ ...signupData, [e.target.name]: e.target.value });
 
-  const handleLoginChange = (e) => {
-    setLoginData({
-      ...loginData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSignupChange = (e) => {
-    setSignupData({
-      ...signupData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  // ================= LOGIN =================
-
+  // ── LOGIN ──
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
       setLoading(true);
-
-      const { data } = await axios.post(
-  "https://settleji.onrender.com/api/auth/login",
-  loginData
-);
-
+      const { data } = await axios.post("https://settleji.onrender.com/api/auth/login", loginData);
       console.log("LOGIN RESPONSE:", data);
-
-      // IMPORTANT
       localStorage.setItem("token", data.token);
-
-      localStorage.setItem(
-        "userInfo",
-        JSON.stringify(data.user)
-      );
-
+      localStorage.setItem("userInfo", JSON.stringify(data.user));
       alert("Login Successful");
-
       navigate("/groups");
     } catch (error) {
       console.log(error);
-
-      alert(
-        error?.response?.data?.message ||
-          "Login Failed"
-      );
-    } finally {
-      setLoading(false);
-    }
+      alert(error?.response?.data?.message || "Login Failed");
+    } finally { setLoading(false); }
   };
 
-  // ================= REGISTER =================
-
+  // ── REGISTER ──
   const handleRegister = async (e) => {
     e.preventDefault();
-
-    if (
-      signupData.password !==
-      signupData.confirmPassword
-    ) {
-      return alert("Passwords do not match");
-    }
-
+    if (signupData.password !== signupData.confirmPassword) return alert("Passwords do not match");
     try {
       setLoading(true);
-
       const formData = new FormData();
-
-      formData.append(
-        "name",
-        `${signupData.firstName} ${signupData.lastName}`
-      );
-
-      formData.append(
-        "email",
-        signupData.email
-      );
-
-      formData.append(
-        "password",
-        signupData.password
-      );
-
-      // IMPORTANT
-      if (image) {
-        formData.append("avatar", image);
-      }
-
+      formData.append("name",     `${signupData.firstName} ${signupData.lastName}`);
+      formData.append("email",    signupData.email);
+      formData.append("password", signupData.password);
+      if (image) formData.append("avatar", image);
       const { data } = await axios.post(
         "https://settleji.onrender.com/api/auth/register",
         formData,
-        {
-          headers: {
-            "Content-Type":
-              "multipart/form-data",
-          },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
-
       console.log("REGISTER RESPONSE:", data);
-
-      // IMPORTANT
       localStorage.setItem("token", data.token);
-
-      localStorage.setItem(
-        "userInfo",
-        JSON.stringify(data.user)
-      );
-
+      localStorage.setItem("userInfo", JSON.stringify(data.user));
       alert("Account Created Successfully");
-
       navigate("/groups");
     } catch (error) {
       console.log(error);
-
-      alert(
-        error?.response?.data?.message ||
-          "Registration Failed"
-      );
-    } finally {
-      setLoading(false);
-    }
+      alert(error?.response?.data?.message || "Registration Failed");
+    } finally { setLoading(false); }
   };
 
   return (
     <>
       <style>{`
-        *{
-          margin:0;
-          padding:0;
-          box-sizing:border-box;
-          font-family:Inter,sans-serif;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+
+        .grad-text {
+          background: linear-gradient(90deg, #7C6FFF, #FF6B9D);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
-        body{
-          background:#f5f6fa;
+        .submit-btn {
+          width: 100%;
+          height: 58px;
+          border: none;
+          border-radius: 20px;
+          background: linear-gradient(135deg, #7C6FFF, #FF6B9D);
+          color: white;
+          font-size: 16px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: opacity .2s;
+          font-family: 'Inter', sans-serif;
         }
+        .submit-btn:hover   { opacity: .92; }
+        .submit-btn:disabled { opacity: .6; cursor: not-allowed; }
 
-        .auth-page{
-          min-height:100vh;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          padding:20px;
-          background:
-            linear-gradient(
-              135deg,
-              #FFF0F9 0%,
-              #F0EEFF 35%,
-              #E8F4FF 70%,
-              #F0FFF4 100%
-            );
+        .field-input {
+          width: 100%;
+          height: 54px;
+          border-radius: 16px;
+          border: 1.5px solid #EDE8FF;
+          background: #FAFAFF;
+          padding: 0 16px;
+          outline: none;
+          font-size: 14px;
+          transition: border-color .2s, background .2s;
+          font-family: 'Inter', sans-serif;
         }
+        .field-input:focus { border-color: #7C6FFF; background: white; }
 
-        .auth-container{
-          width:100%;
-          max-width:1200px;
-          min-height:760px;
-          background:white;
-          border-radius:30px;
-          overflow:hidden;
-          display:flex;
-          box-shadow:
-            0 10px 40px rgba(0,0,0,0.08);
-        }
-
-        /* LEFT */
-
-        .left-side{
-          width:45%;
-          background:
-            linear-gradient(
-              135deg,
-              #7C6FFF,
-              #FF6B9D
-            );
-          padding:50px;
-          color:white;
-          position:relative;
-          overflow:hidden;
-          display:flex;
-          align-items:center;
-        }
-
-        .left-side::before{
-          content:'';
-          position:absolute;
-          width:250px;
-          height:250px;
-          border-radius:50%;
-          background:rgba(255,255,255,0.08);
-          top:-80px;
-          right:-60px;
-        }
-
-        .left-side::after{
-          content:'';
-          position:absolute;
-          width:220px;
-          height:220px;
-          border-radius:50%;
-          background:rgba(255,255,255,0.06);
-          bottom:-70px;
-          left:-50px;
-        }
-
-        .left-content{
-          position:relative;
-          z-index:2;
-        }
-
-        .logo{
-          display:flex;
-          align-items:center;
-          gap:12px;
-          margin-bottom:40px;
-        }
-
-        .logo-box{
-          width:52px;
-          height:52px;
-          border-radius:16px;
-          background:rgba(255,255,255,0.2);
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          font-size:24px;
-        }
-
-        .logo h1{
-          font-size:30px;
-          font-weight:800;
-        }
-
-        .main-heading{
-          font-size:52px;
-          line-height:1.08;
-          font-weight:800;
-          margin-bottom:20px;
-        }
-
-        .left-content p{
-          font-size:16px;
-          line-height:1.8;
-          opacity:0.9;
-          max-width:350px;
-        }
-
-        .stats{
-          display:flex;
-          gap:14px;
-          margin-top:40px;
-          flex-wrap:wrap;
-        }
-
-        .stat-card{
-          background:rgba(255,255,255,0.15);
-          border:1px solid rgba(255,255,255,0.15);
-          padding:16px 18px;
-          border-radius:18px;
-          min-width:110px;
-        }
-
-        .stat-card h2{
-          font-size:24px;
-          font-weight:800;
-          margin-bottom:4px;
-        }
-
-        .stat-card span{
-          font-size:12px;
-          opacity:0.9;
-        }
-
-        /* RIGHT */
-
-        .right-side{
-          width:55%;
-          padding:40px 50px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-        }
-
-        .form-container{
-          width:100%;
-          max-width:450px;
-        }
-
-        .top-switch{
-          display:flex;
-          justify-content:flex-end;
-          margin-bottom:28px;
-        }
-
-        .switch-box{
-          background:#F4F0FF;
-          padding:5px;
-          border-radius:16px;
-          display:flex;
-          gap:4px;
-        }
-
-        .switch-btn{
-          width:110px;
-          height:42px;
-          border:none;
-          border-radius:12px;
-          background:transparent;
-          cursor:pointer;
-          font-weight:700;
-          color:#8b8bb5;
-          transition:0.2s;
-        }
-
-        .switch-btn.active{
-          background:white;
-          color:#7C6FFF;
-          box-shadow:
-            0 2px 8px rgba(124,111,255,0.15);
-        }
-
-        .title{
-          font-size:38px;
-          font-weight:800;
-          color:#1a1a2e;
-        }
-
-        .title-gradient{
-          background:
-            linear-gradient(
-              90deg,
-              #7C6FFF,
-              #FF6B9D
-            );
-
-          -webkit-background-clip:text;
-          -webkit-text-fill-color:transparent;
-        }
-
-        .subtitle{
-          margin-top:10px;
-          color:#7B7B9D;
-          font-size:14px;
-          line-height:1.7;
-        }
-
-        /* PROFILE */
-
-        .profile-section{
-          margin-top:22px;
-          display:flex;
-          align-items:center;
-          gap:16px;
-          padding:16px;
-          border-radius:20px;
-          background:
-            linear-gradient(
-              135deg,
-              #FFF0F9,
-              #F0EEFF
-            );
-        }
-
-        .profile-image{
-          width:70px;
-          height:70px;
-          border-radius:18px;
-          object-fit:cover;
-          border:3px solid white;
-        }
-
-        .upload-info h3{
-          font-size:15px;
-          margin-bottom:5px;
-          color:#1a1a2e;
-        }
-
-        .upload-info p{
-          font-size:12px;
-          color:#8b8bb5;
-          margin-bottom:10px;
-        }
-
-        .upload-btn{
-          display:inline-flex;
-          align-items:center;
-          height:36px;
-          padding:0 16px;
-          border-radius:12px;
-          background:
-            linear-gradient(
-              90deg,
-              #7C6FFF,
-              #9D6FFF
-            );
-          color:white;
-          font-size:13px;
-          font-weight:700;
-          cursor:pointer;
-        }
-
-        .upload-input{
-          display:none;
-        }
-
-        form{
-          margin-top:22px;
-        }
-
-        .form-grid{
-          display:grid;
-          grid-template-columns:1fr 1fr;
-          gap:14px;
-        }
-
-        .login-grid{
-          display:grid;
-          grid-template-columns:1fr;
-          gap:14px;
-        }
-
-        .full{
-          grid-column:span 2;
-        }
-
-        .input-group label{
-          display:block;
-          margin-bottom:7px;
-          font-size:13px;
-          font-weight:700;
-          color:#555;
-        }
-
-        .input-group input{
-          width:100%;
-          height:54px;
-          border-radius:16px;
-          border:1.5px solid #EDE8FF;
-          background:#FAFAFF;
-          padding:0 16px;
-          outline:none;
-          font-size:14px;
-          transition:0.2s;
-        }
-
-        .input-group input:focus{
-          border-color:#7C6FFF;
-          background:white;
-        }
-
-        .forgot{
-          text-align:right;
-          margin-top:8px;
-          margin-bottom:18px;
-          color:#7C6FFF;
-          font-size:13px;
-          font-weight:700;
-          cursor:pointer;
-        }
-
-        .submit-btn{
-          width:100%;
-          height:58px;
-          border:none;
-          border-radius:20px;
-          background:
-            linear-gradient(
-              135deg,
-              #7C6FFF,
-              #FF6B9D
-            );
-          color:white;
-          font-size:16px;
-          font-weight:800;
-          cursor:pointer;
-          transition:0.2s;
-        }
-
-        .submit-btn:hover{
-          opacity:0.92;
-        }
-
-        .submit-btn:disabled{
-          opacity:0.6;
-          cursor:not-allowed;
-        }
-
-        .bottom-text{
-          margin-top:20px;
-          text-align:center;
-          color:#9090B0;
-          font-size:14px;
-        }
-
-        .bottom-text span{
-          font-weight:800;
-          cursor:pointer;
-
-          background:
-            linear-gradient(
-              90deg,
-              #7C6FFF,
-              #FF6B9D
-            );
-
-          -webkit-background-clip:text;
-          -webkit-text-fill-color:transparent;
-        }
-
-        @media(max-width:900px){
-          .left-side{
-            display:none;
-          }
-
-          .right-side{
-            width:100%;
-            padding:28px;
-          }
-
-          .auth-container{
-            max-width:520px;
-          }
-        }
-
-        @media(max-width:500px){
-
-          .form-grid{
-            grid-template-columns:1fr;
-          }
-
-          .full{
-            grid-column:span 1;
-          }
-
-          .title{
-            font-size:30px;
-          }
-
-          .right-side{
-            padding:20px;
-          }
-        }
+        /* left side orbs */
+        .left-orb-top    { position:absolute; width:250px; height:250px; border-radius:50%; background:rgba(255,255,255,0.08); top:-80px; right:-60px; }
+        .left-orb-bottom { position:absolute; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,0.06); bottom:-70px; left:-50px; }
       `}</style>
 
-      <div className="auth-page">
-        <div className="auth-container">
+      {/* PAGE WRAPPER */}
+      <div
+        className="min-h-screen flex items-center justify-center p-5"
+        style={{ background: "linear-gradient(135deg,#FFF0F9 0%,#F0EEFF 35%,#E8F4FF 70%,#F0FFF4 100%)" }}
+      >
+        {/* CARD */}
+        <div className="w-full max-w-[1200px] min-h-[760px] bg-white rounded-[30px] overflow-hidden flex shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
 
-          {/* LEFT SIDE */}
+          {/* ══════════════════════════════
+              LEFT SIDE  (hidden on mobile)
+          ══════════════════════════════ */}
+          <div
+            className="hidden lg:flex w-[45%] relative items-center p-[50px] text-white overflow-hidden"
+            style={{ background: "linear-gradient(135deg,#7C6FFF,#FF6B9D)" }}
+          >
+            <div className="left-orb-top" />
+            <div className="left-orb-bottom" />
 
-          <div className="left-side">
-            <div className="left-content">
-
-              <div className="logo">
-                <div className="logo-box">
-                  💸
-                </div>
-
-                <h1>SettleJi</h1>
+            <div className="relative z-10">
+              {/* logo */}
+              <div className="flex items-center gap-3 mb-10">
+                <div className="w-[52px] h-[52px] rounded-2xl bg-white/20 flex items-center justify-center text-2xl">💸</div>
+                <h1 className="text-[30px] font-extrabold">SettleJi</h1>
               </div>
 
-              <h2 className="main-heading">
-                Split Expenses
-                <br />
-                Without Stress.
+              <h2 className="text-[52px] leading-[1.08] font-extrabold mb-5">
+                Split Expenses<br />Without Stress.
               </h2>
 
-              <p>
-                Manage group expenses,
-                trips, balances and
-                settlements beautifully
-                with your friends.
+              <p className="text-base leading-[1.8] opacity-90 max-w-[350px]">
+                Manage group expenses, trips, balances and settlements beautifully with your friends.
               </p>
 
-              <div className="stats">
-
-                <div className="stat-card">
-                  <h2>12K+</h2>
-                  <span>Active Users</span>
-                </div>
-
-                <div className="stat-card">
-                  <h2>₹2M+</h2>
-                  <span>Tracked</span>
-                </div>
-
-                <div className="stat-card">
-                  <h2>4.9★</h2>
-                  <span>Ratings</span>
-                </div>
-
+              {/* stats */}
+              <div className="flex gap-3.5 mt-10 flex-wrap">
+                {[
+                  { val:"12K+", label:"Active Users" },
+                  { val:"₹2M+", label:"Tracked" },
+                  { val:"4.9★", label:"Ratings" },
+                ].map((s,i) => (
+                  <div key={i} className="bg-white/15 border border-white/15 px-[18px] py-4 rounded-[18px] min-w-[110px]">
+                    <div className="text-2xl font-extrabold mb-1">{s.val}</div>
+                    <span className="text-xs opacity-90">{s.label}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
-
-          <div className="right-side">
-            <div className="form-container">
+          {/* ══════════════════════════════
+              RIGHT SIDE
+          ══════════════════════════════ */}
+          <div className="flex-1 lg:w-[55%] flex items-center justify-center px-5 py-8 sm:px-10 sm:py-10">
+            <div className="w-full max-w-[450px]">
 
               {/* SWITCH */}
-
-              <div className="top-switch">
-                <div className="switch-box">
-
-                  <button
-                    type="button"
-                    className={`switch-btn ${
-                      isLogin ? "active" : ""
-                    }`}
-                    onClick={() => setIsLogin(true)}
-                  >
-                    Login
-                  </button>
-
-                  <button
-                    type="button"
-                    className={`switch-btn ${
-                      !isLogin ? "active" : ""
-                    }`}
-                    onClick={() => setIsLogin(false)}
-                  >
-                    Sign Up
-                  </button>
-
+              <div className="flex justify-end mb-7">
+                <div className="bg-[#F4F0FF] p-[5px] rounded-2xl flex gap-1">
+                  {["Login","Sign Up"].map((label, i) => {
+                    const active = i === 0 ? isLogin : !isLogin;
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => setIsLogin(i === 0)}
+                        className={`w-[110px] h-[42px] rounded-xl font-bold text-sm transition-all duration-200 border-none cursor-pointer ${
+                          active
+                            ? "bg-white text-[#7C6FFF] shadow-[0_2px_8px_rgba(124,111,255,0.15)]"
+                            : "bg-transparent text-[#8b8bb5]"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <h1 className="title">
+              {/* TITLE */}
+              <h1 className="text-[30px] sm:text-[38px] font-extrabold text-[#1a1a2e]">
                 {isLogin ? (
-                  <>
-                    Welcome{" "}
-                    <span className="title-gradient">
-                      Back 👋
-                    </span>
-                  </>
+                  <>Welcome <span className="grad-text">Back 👋</span></>
                 ) : (
-                  <>
-                    Create{" "}
-                    <span className="title-gradient">
-                      Account ✨
-                    </span>
-                  </>
+                  <>Create <span className="grad-text">Account ✨</span></>
                 )}
               </h1>
 
-              <p className="subtitle">
+              <p className="mt-2.5 text-[#7B7B9D] text-sm leading-[1.7]">
                 {isLogin
                   ? "Login and continue managing your expenses beautifully."
                   : "Create your account and start splitting smarter."}
               </p>
 
-              {/* PROFILE */}
-
+              {/* PROFILE (signup only) */}
               {!isLogin && (
-                <div className="profile-section">
-
-                  <img
-                    src={preview}
-                    alt=""
-                    className="profile-image"
-                  />
-
-                  <div className="upload-info">
-                    <h3>Profile Picture</h3>
-
-                    <p>
-                      Upload your profile image
-                    </p>
-
+                <div
+                  className="mt-5 flex items-center gap-4 p-4 rounded-[20px]"
+                  style={{ background: "linear-gradient(135deg,#FFF0F9,#F0EEFF)" }}
+                >
+                  <img src={preview} alt="preview" className="w-[70px] h-[70px] rounded-[18px] object-cover border-[3px] border-white flex-shrink-0" />
+                  <div>
+                    <h3 className="text-[15px] font-bold text-[#1a1a2e] mb-1">Profile Picture</h3>
+                    <p className="text-xs text-[#8b8bb5] mb-2.5">Upload your profile image</p>
                     <label
                       htmlFor="profile"
-                      className="upload-btn"
+                      className="inline-flex items-center h-9 px-4 rounded-xl cursor-pointer text-[13px] font-bold text-white"
+                      style={{ background: "linear-gradient(90deg,#7C6FFF,#9D6FFF)" }}
                     >
                       Upload Image
                     </label>
-
-                    <input
-                      type="file"
-                      id="profile"
-                      className="upload-input"
-                      accept="image/*"
-                      onChange={handleImage}
-                    />
+                    <input type="file" id="profile" className="hidden" accept="image/*" onChange={handleImage} />
                   </div>
                 </div>
               )}
 
-              {/* LOGIN */}
-
+              {/* ── LOGIN FORM ── */}
               {isLogin ? (
+                <form onSubmit={handleLogin} className="mt-5">
+                  <div className="flex flex-col gap-3.5">
 
-                <form onSubmit={handleLogin}>
-
-                  <div className="login-grid">
-
-                    <div className="input-group">
-                      <label>Email</label>
-
+                    <div>
+                      <label className="block mb-[7px] text-[13px] font-bold text-[#555]">Email</label>
                       <input
-                        type="email"
-                        name="email"
-                        placeholder="Enter your email"
-                        value={loginData.email}
-                        onChange={handleLoginChange}
-                        required
+                        type="email" name="email" placeholder="Enter your email"
+                        value={loginData.email} onChange={handleLoginChange}
+                        required className="field-input"
                       />
                     </div>
 
-                    <div className="input-group">
-                      <label>Password</label>
-
+                    <div>
+                      <label className="block mb-[7px] text-[13px] font-bold text-[#555]">Password</label>
                       <input
-                        type="password"
-                        name="password"
-                        placeholder="Enter password"
-                        value={loginData.password}
-                        onChange={handleLoginChange}
-                        required
+                        type="password" name="password" placeholder="Enter password"
+                        value={loginData.password} onChange={handleLoginChange}
+                        required className="field-input"
                       />
                     </div>
 
                   </div>
 
-                  <div className="forgot">
+                  <div className="text-right mt-2 mb-[18px] text-[#7C6FFF] text-[13px] font-bold cursor-pointer">
                     Forgot Password?
                   </div>
 
-                  <button
-                    className="submit-btn"
-                    disabled={loading}
-                  >
-                    {loading
-                      ? "Please wait..."
-                      : "Login to Dashboard"}
+                  <button className="submit-btn" disabled={loading}>
+                    {loading ? "Please wait..." : "Login to Dashboard"}
                   </button>
-
                 </form>
 
               ) : (
 
-                <form onSubmit={handleRegister}>
+                /* ── SIGNUP FORM ── */
+                <form onSubmit={handleRegister} className="mt-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
 
-                  <div className="form-grid">
-
-                    <div className="input-group">
-                      <label>First Name</label>
-
+                    <div>
+                      <label className="block mb-[7px] text-[13px] font-bold text-[#555]">First Name</label>
                       <input
-                        type="text"
-                        name="firstName"
-                        placeholder="Ayush"
-                        value={signupData.firstName}
-                        onChange={handleSignupChange}
-                        required
+                        type="text" name="firstName" placeholder="Ayush"
+                        value={signupData.firstName} onChange={handleSignupChange}
+                        required className="field-input"
                       />
                     </div>
 
-                    <div className="input-group">
-                      <label>Last Name</label>
-
+                    <div>
+                      <label className="block mb-[7px] text-[13px] font-bold text-[#555]">Last Name</label>
                       <input
-                        type="text"
-                        name="lastName"
-                        placeholder="Nagpal"
-                        value={signupData.lastName}
-                        onChange={handleSignupChange}
-                        required
+                        type="text" name="lastName" placeholder="Nagpal"
+                        value={signupData.lastName} onChange={handleSignupChange}
+                        required className="field-input"
                       />
                     </div>
 
-                    <div className="input-group full">
-                      <label>Email</label>
-
+                    <div className="sm:col-span-2">
+                      <label className="block mb-[7px] text-[13px] font-bold text-[#555]">Email</label>
                       <input
-                        type="email"
-                        name="email"
-                        placeholder="Enter your email"
-                        value={signupData.email}
-                        onChange={handleSignupChange}
-                        required
+                        type="email" name="email" placeholder="Enter your email"
+                        value={signupData.email} onChange={handleSignupChange}
+                        required className="field-input"
                       />
                     </div>
 
-                    <div className="input-group full">
-                      <label>Password</label>
-
+                    <div className="sm:col-span-2">
+                      <label className="block mb-[7px] text-[13px] font-bold text-[#555]">Password</label>
                       <input
-                        type="password"
-                        name="password"
-                        placeholder="Enter password"
-                        value={signupData.password}
-                        onChange={handleSignupChange}
-                        required
+                        type="password" name="password" placeholder="Enter password"
+                        value={signupData.password} onChange={handleSignupChange}
+                        required className="field-input"
                       />
                     </div>
 
-                    <div className="input-group full">
-                      <label>
-                        Confirm Password
-                      </label>
-
+                    <div className="sm:col-span-2">
+                      <label className="block mb-[7px] text-[13px] font-bold text-[#555]">Confirm Password</label>
                       <input
-                        type="password"
-                        name="confirmPassword"
-                        placeholder="Confirm password"
-                        value={
-                          signupData.confirmPassword
-                        }
-                        onChange={handleSignupChange}
-                        required
+                        type="password" name="confirmPassword" placeholder="Confirm password"
+                        value={signupData.confirmPassword} onChange={handleSignupChange}
+                        required className="field-input"
                       />
                     </div>
 
                   </div>
 
-                  <button
-                    className="submit-btn"
-                    disabled={loading}
-                    style={{ marginTop: "12px" }}
-                  >
-                    {loading
-                      ? "Creating Account..."
-                      : "Create Account"}
+                  <button className="submit-btn mt-3" disabled={loading}>
+                    {loading ? "Creating Account..." : "Create Account"}
                   </button>
-
                 </form>
-
               )}
 
-              <div className="bottom-text">
-
-                {isLogin
-                  ? "Don't have an account?"
-                  : "Already have an account?"}
-
+              {/* BOTTOM SWITCH TEXT */}
+              <p className="mt-5 text-center text-[#9090B0] text-sm">
+                {isLogin ? "Don't have an account?" : "Already have an account?"}
+                {" "}
                 <span
-                  onClick={() =>
-                    setIsLogin(!isLogin)
-                  }
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="grad-text font-extrabold cursor-pointer"
                 >
-                  {isLogin
-                    ? " Sign Up"
-                    : " Login"}
+                  {isLogin ? "Sign Up" : "Login"}
                 </span>
-
-              </div>
+              </p>
 
             </div>
           </div>
+
         </div>
       </div>
     </>

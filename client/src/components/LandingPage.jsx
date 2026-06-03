@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function App() {
   const [activeFeature, setActiveFeature] = useState(0);
+  const navigate = useNavigate();
 
   const features = [
     {
@@ -94,6 +95,8 @@ function App() {
     },
   ];
 
+  const af = features[activeFeature];
+
   return (
     <>
       <style>{`
@@ -112,10 +115,6 @@ function App() {
           --purple: #7C6FCD;
           --white: #FFFFFF;
           --border: rgba(26,18,40,0.08);
-          --r-sm: 16px;
-          --r-md: 24px;
-          --r-lg: 32px;
-          --r-xl: 48px;
         }
 
         body {
@@ -125,1297 +124,350 @@ function App() {
           overflow-x: hidden;
         }
 
-        /* ── HERO ── */
-        .hero {
-          min-height: 100vh;
-          padding: 80px 7% 80px;
-          display: flex;
-          align-items: center;
-          gap: 64px;
-          position: relative;
-          overflow: hidden;
-        }
+        @keyframes spin    { to { transform: rotate(360deg); } }
+        @keyframes float   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+        @keyframes fadein  { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse   { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
 
-        /* floating blobs */
-        .blob {
-          position: absolute;
-          border-radius: 50%;
-          pointer-events: none;
-          z-index: 0;
-        }
-        .blob-1 { width:480px; height:480px; background:#FFE0CC; top:-160px; right:-80px; filter:blur(90px); opacity:.7; }
-        .blob-2 { width:360px; height:360px; background:#C5F0E8; bottom:-100px; left:-80px; filter:blur(80px); opacity:.65; }
-        .blob-3 { width:200px; height:200px; background:#E0DBFF; top:40%; left:42%; filter:blur(60px); opacity:.55; }
+        .syne { font-family: 'Syne', sans-serif; }
 
-        /* decorative geometric shapes */
+        /* blobs */
+        .blob { position:absolute; border-radius:50%; pointer-events:none; z-index:0; }
+        .blob-1 { width:480px;height:480px;background:#FFE0CC;top:-160px;right:-80px;filter:blur(90px);opacity:.7; }
+        .blob-2 { width:360px;height:360px;background:#C5F0E8;bottom:-100px;left:-80px;filter:blur(80px);opacity:.65; }
+        .blob-3 { width:200px;height:200px;background:#E0DBFF;top:40%;left:42%;filter:blur(60px);opacity:.55; }
+
+        /* deco */
         .deco { position:absolute; pointer-events:none; z-index:0; }
-        .deco-ring {
-          width:120px; height:120px;
-          border:14px solid #FFD4B3;
-          border-radius:50%;
-          top:12%; right:10%;
-          animation: spin 18s linear infinite;
-        }
-        .deco-dot-grid {
-          width:140px; height:140px;
-          top:62%; right:7%;
-          background-image: radial-gradient(circle, #C5A8FF 1.5px, transparent 1.5px);
-          background-size: 18px 18px;
-          opacity:.5;
-        }
-        .deco-pill {
-          width:60px; height:22px;
-          background:#B3F5E6;
-          border-radius:999px;
-          bottom:18%; left:8%;
-          opacity:.8;
-        }
-        .deco-sq {
-          width:44px; height:44px;
-          background:#FFE499;
-          border-radius:10px;
-          bottom:28%; left:5%;
-          transform: rotate(20deg);
-          opacity:.7;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes float {
-          0%,100% { transform: translateY(0); }
-          50% { transform: translateY(-14px); }
-        }
-        @keyframes fadein {
-          from { opacity:0; transform:translateY(24px); }
-          to   { opacity:1; transform:translateY(0); }
-        }
-
-        .hero-left {
-          flex: 1;
-          position: relative;
-          z-index: 2;
-          max-width: 600px;
-          animation: fadein .7s ease both;
-        }
-
-        .hero-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          background: white;
-          border: 1.5px solid #E8D8FF;
-          border-radius: 999px;
-          padding: 10px 20px 10px 12px;
-          font-size: 13px;
-          font-weight: 700;
-          color: #5B3FBF;
-          margin-bottom: 34px;
-          box-shadow: 0 4px 20px rgba(124,111,205,.12);
-        }
-
-        .hero-badge-icon {
-          width: 28px; height: 28px;
-          background: linear-gradient(135deg,#9D7BFF,#6C63FF);
-          border-radius: 8px;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 14px;
-        }
-
-        .hero h1 {
-          font-family: 'Syne', sans-serif;
-          font-size: 80px;
-          line-height: 1.0;
-          font-weight: 800;
-          letter-spacing: -3px;
-          color: var(--ink);
-          margin-bottom: 28px;
-        }
-
-        .hero h1 em {
-          font-style: normal;
-          position: relative;
-          display: inline-block;
-        }
-
-        .hero h1 em::after {
-          content: '';
-          position: absolute;
-          bottom: 6px;
-          left: 0; right: 0;
-          height: 12px;
-          background: #FFE480;
-          border-radius: 4px;
-          z-index: -1;
-          transform: rotate(-1deg);
-        }
-
-        .hero-sub {
-          font-size: 18px;
-          line-height: 1.8;
-          color: var(--ink2);
-          font-weight: 500;
-          max-width: 520px;
-        }
-
-        .hero-actions {
-          display: flex;
-          gap: 16px;
-          margin-top: 44px;
-          flex-wrap: wrap;
-          align-items: center;
-        }
-
-        .btn-primary {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          background: var(--ink);
-          color: white;
-          border: none;
-          padding: 18px 36px;
-          border-radius: 999px;
-          font-size: 15px;
-          font-weight: 700;
-          font-family: 'DM Sans', sans-serif;
-          cursor: pointer;
-          transition: transform .25s, box-shadow .25s;
-          box-shadow: 0 8px 28px rgba(26,18,40,.22);
-        }
-        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(26,18,40,.28); }
-
-        .btn-primary .arrow-box {
-          width: 30px; height: 30px;
-          background: rgba(255,255,255,.18);
-          border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 16px;
-        }
-
-        .btn-ghost {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: transparent;
-          color: var(--ink);
-          border: 2px solid var(--border);
-          padding: 16px 30px;
-          border-radius: 999px;
-          font-size: 15px;
-          font-weight: 700;
-          font-family: 'DM Sans', sans-serif;
-          cursor: pointer;
-          transition: border-color .2s, background .2s;
-        }
-        .btn-ghost:hover { border-color: var(--purple); background: #F5F3FF; }
-
-        .play-icon {
-          width: 26px; height: 26px;
-          background: var(--ink);
-          border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          color: white;
-          font-size: 10px;
-          padding-left: 2px;
-        }
-
-        .hero-trust {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          margin-top: 44px;
-        }
-
-        .avatar-stack {
-          display: flex;
-        }
-
-        .avatar {
-          width: 38px; height: 38px;
-          border-radius: 50%;
-          border: 2.5px solid white;
-          margin-left: -10px;
-          overflow: hidden;
-          background: linear-gradient(135deg, #FFB347, #FF6B6B);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 13px;
-          font-weight: 800;
-          color: white;
-        }
-
-        .avatar:first-child { margin-left: 0; }
-        .av2 { background: linear-gradient(135deg, #6C63FF, #00C9A7); }
-        .av3 { background: linear-gradient(135deg, #FF6B6B, #E040FB); }
-        .av4 { background: linear-gradient(135deg, #2ECC71, #FFB347); }
-
-        .trust-text { font-size: 14px; font-weight: 600; color: var(--ink2); }
-        .trust-text strong { color: var(--ink); }
-
-        /* ── HERO RIGHT — CARD ── */
-        .hero-right {
-          flex: 1;
-          display: flex;
-          justify-content: center;
-          position: relative;
-          z-index: 2;
-          animation: fadein .9s .2s ease both;
-        }
-
-        .hero-card-wrap {
-          animation: float 6s ease-in-out infinite;
-          width: 100%;
-          max-width: 440px;
-        }
-
-        .expense-card {
-          background: white;
-          border-radius: var(--r-xl);
-          padding: 32px;
-          border: 1.5px solid rgba(0,0,0,.06);
-          box-shadow: 0 32px 80px rgba(26,18,40,.12), 0 2px 8px rgba(0,0,0,.04);
-        }
-
-        .card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 26px;
-        }
-
-        .card-title-row h3 {
-          font-family: 'Syne', sans-serif;
-          font-size: 20px;
-          font-weight: 800;
-          color: var(--ink);
-          margin-bottom: 4px;
-        }
-
-        .card-title-row p { font-size: 13px; color: var(--ink3); font-weight: 500; }
-
-        .status-chip {
-          background: #E8FBF4;
-          color: #006B50;
-          border: 1.5px solid #A3EDD0;
-          padding: 7px 14px;
-          border-radius: 999px;
-          font-size: 12px;
-          font-weight: 700;
-          white-space: nowrap;
-        }
-
-        .exp-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 16px 18px;
-          border-radius: 18px;
-          margin-bottom: 12px;
-          transition: transform .2s;
-        }
-        .exp-row:hover { transform: translateX(4px); }
-
-        .exp-row.purple { background:#F0EEFF; }
-        .exp-row.orange { background:#FFF4E6; }
-
-        .exp-label { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-        .exp-sub   { font-size: 12px; color: var(--ink3); font-weight: 500; }
-
-        .exp-amount { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--ink); text-align:right; margin-bottom:4px; }
-        .tag-settled { font-size: 11px; font-weight: 700; color: #006B50; background:#D4F7EA; padding:3px 10px; border-radius:999px; display:inline-block; }
-        .tag-pending { font-size: 11px; font-weight: 700; color: #A34800; background:#FFE8CC; padding:3px 10px; border-radius:999px; display:inline-block; }
-
-        .ai-insight {
-          background: linear-gradient(135deg,#F0EEFF,#E8F8FF);
-          border: 1.5px solid #D4CCFF;
-          border-radius: 20px;
-          padding: 18px 20px;
-          margin-top: 16px;
-        }
-
-        .ai-insight-head {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 13px;
-          font-weight: 800;
-          color: #3D2DBF;
-          margin-bottom: 10px;
-        }
-
-        .ai-dot {
-          width: 8px; height: 8px;
-          background: #7C6FCD;
-          border-radius: 50%;
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
-
-        .ai-insight p { font-size: 13px; color: #3D2DBF; font-weight: 500; line-height: 1.7; }
-
-        /* floating mini cards */
-        .mini-card {
-          position: absolute;
-          background: white;
-          border-radius: 18px;
-          padding: 14px 18px;
-          border: 1.5px solid rgba(0,0,0,.07);
-          box-shadow: 0 12px 32px rgba(0,0,0,.1);
-          z-index: 3;
-          white-space: nowrap;
-        }
-
-        .mini-card-1 {
-          top: -18px; left: -30px;
-          animation: float 5s 1s ease-in-out infinite;
-        }
-
-        .mini-card-2 {
-          bottom: 30px; right: -24px;
-          animation: float 7s 2s ease-in-out infinite;
-        }
-
-        .mini-label { font-size: 11px; font-weight: 700; color: var(--ink3); margin-bottom: 4px; }
-        .mini-value { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--ink); }
-        .mini-sub   { font-size: 11px; color: #00C896; font-weight: 700; margin-top: 2px; }
-
-        /* ── STATS STRIP ── */
-        .stats-strip {
-          background: var(--ink);
-          margin: 0 7%;
-          border-radius: var(--r-lg);
-          padding: 44px 48px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 32px;
-          flex-wrap: wrap;
-        }
-
-        .stat-item { text-align: center; flex: 1; min-width: 120px; }
-
-        .stat-num {
-          font-family: 'Syne', sans-serif;
-          font-size: 46px;
-          font-weight: 800;
-          margin-bottom: 6px;
-        }
-
-        .stat-num.c1 { color: #FFB347; }
-        .stat-num.c2 { color: #00C9A7; }
-        .stat-num.c3 { color: #9D7BFF; }
-
-        .stat-desc { font-size: 14px; color: rgba(255,255,255,.55); font-weight: 500; }
-
-        .stat-divider {
-          width: 1px;
-          height: 60px;
-          background: rgba(255,255,255,.12);
-        }
-
-        /* ── FEATURES ── */
-        .features {
-          padding: 110px 7%;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .sec-eyebrow {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: var(--purple);
-          background: #F0EEFF;
-          border: 1.5px solid #D4CCFF;
-          padding: 8px 18px;
-          border-radius: 999px;
-          margin-bottom: 20px;
-        }
-
-        .sec-title {
-          font-family: 'Syne', sans-serif;
-          font-size: 54px;
-          font-weight: 800;
-          letter-spacing: -2px;
-          color: var(--ink);
-          line-height: 1.1;
-          margin-bottom: 14px;
-        }
-
-        .sec-title span { color: var(--coral); }
-
-        .sec-sub {
-          font-size: 17px;
-          color: var(--ink2);
-          font-weight: 500;
-          max-width: 480px;
-          line-height: 1.75;
-        }
-
-        .features-layout {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 48px;
-          align-items: start;
-          margin-top: 64px;
-        }
-
-        .features-list { display: flex; flex-direction: column; gap: 12px; }
-
-        .feat-row {
-          display: flex;
-          align-items: flex-start;
-          gap: 20px;
-          padding: 24px 26px;
-          border-radius: 24px;
-          border: 1.5px solid transparent;
-          cursor: pointer;
-          transition: all .25s;
-          background: white;
-        }
-
-        .feat-row.active {
-          border-color: rgba(0,0,0,.08);
-          box-shadow: 0 8px 32px rgba(0,0,0,.08);
-        }
-
-        .feat-row:not(.active):hover {
-          background: white;
-          border-color: rgba(0,0,0,.05);
-        }
-
-        .feat-icon-wrap {
-          width: 52px; height: 52px;
-          border-radius: 16px;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 26px;
-          flex-shrink: 0;
-        }
-
-        .feat-text h4 {
-          font-family: 'Syne', sans-serif;
-          font-size: 17px;
-          font-weight: 800;
-          margin-bottom: 6px;
-          color: var(--ink);
-        }
-
-        .feat-text p { font-size: 14px; color: var(--ink2); line-height: 1.7; font-weight: 500; }
-
-        .features-preview {
-          position: sticky;
-          top: 40px;
-        }
-
-        .feat-preview-card {
-          border-radius: 36px;
-          padding: 44px 40px;
-          min-height: 380px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          transition: background .4s;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .feat-preview-card::before {
-          content: '';
-          position: absolute;
-          width: 200px; height: 200px;
-          border-radius: 50%;
-          background: rgba(255,255,255,.4);
-          bottom: -60px; right: -60px;
-        }
-
-        .feat-preview-card::after {
-          content: '';
-          position: absolute;
-          width: 120px; height: 120px;
-          border-radius: 50%;
-          background: rgba(255,255,255,.25);
-          top: 20px; left: -30px;
-        }
-
-        .feat-big-icon { font-size: 72px; margin-bottom: 28px; position: relative; z-index: 1; }
-
-        .feat-preview-title {
-          font-family: 'Syne', sans-serif;
-          font-size: 28px;
-          font-weight: 800;
-          margin-bottom: 14px;
-          position: relative; z-index: 1;
-        }
-
-        .feat-preview-desc {
-          font-size: 16px;
-          line-height: 1.8;
-          font-weight: 500;
-          opacity: .8;
-          position: relative; z-index: 1;
-        }
-
-        .feat-preview-pill {
-          display: inline-block;
-          padding: 8px 20px;
-          border-radius: 999px;
-          font-size: 12px;
-          font-weight: 800;
-          margin-bottom: 28px;
-          position: relative; z-index: 1;
-        }
-
-        /* ── TRIPS ── */
-        .trips {
-          padding: 100px 7%;
-          background: white;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .trips::before {
-          content: '';
-          position: absolute;
-          width: 500px; height: 500px;
-          border-radius: 50%;
-          background: #FFF0FA;
-          top: -160px; right: -120px;
-          filter: blur(80px);
-          opacity: .7;
-        }
-
-        .trips-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-          margin-bottom: 56px;
-          flex-wrap: wrap;
-          gap: 24px;
-        }
-
-        .see-all-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          border: 2px solid var(--border);
-          padding: 12px 24px;
-          border-radius: 999px;
-          font-size: 14px;
-          font-weight: 700;
-          color: var(--ink);
-          background: transparent;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          transition: border-color .2s, background .2s;
-        }
-        .see-all-btn:hover { border-color: var(--purple); background: #F5F3FF; }
-
-        .trip-grid {
-          display: grid;
-          grid-template-columns: repeat(3,1fr);
-          gap: 24px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .trip-card {
-          background: var(--cream);
-          border-radius: 32px;
-          overflow: hidden;
-          border: 1.5px solid rgba(0,0,0,.06);
-          transition: transform .3s, box-shadow .3s;
-        }
-        .trip-card:hover { transform: translateY(-8px); box-shadow: 0 24px 56px rgba(0,0,0,.1); }
-
-        .trip-img-wrap { position: relative; overflow: hidden; }
-
-        .trip-img-wrap img {
-          width: 100%;
-          height: 210px;
-          object-fit: cover;
-          display: block;
-          transition: transform .4s;
-        }
-
-        .trip-card:hover .trip-img-wrap img { transform: scale(1.06); }
-
-        .trip-tag {
-          position: absolute;
-          top: 16px; left: 16px;
-          padding: 7px 14px;
-          border-radius: 999px;
-          font-size: 12px;
-          font-weight: 800;
-          border: 1.5px solid rgba(0,0,0,.06);
-        }
-
-        .trip-body { padding: 24px; }
-
-        .trip-body h3 {
-          font-family: 'Syne', sans-serif;
-          font-size: 20px;
-          font-weight: 800;
-          color: var(--ink);
-          margin-bottom: 14px;
-        }
-
-        .trip-meta {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 22px;
-          flex-wrap: wrap;
-        }
-
-        .meta-chip {
-          font-size: 12px;
-          font-weight: 700;
-          padding: 6px 14px;
-          border-radius: 999px;
-          background: white;
-          border: 1.5px solid rgba(0,0,0,.07);
-          color: var(--ink2);
-        }
-
-        .meta-chip.amount { background: var(--ink); color: white; border-color: var(--ink); }
-
-        .trip-open-btn {
-          width: 100%;
-          border: none;
-          padding: 14px;
-          border-radius: 18px;
-          background: var(--ink);
-          color: white;
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          transition: opacity .2s, transform .2s;
-        }
-        .trip-open-btn:hover { opacity: .86; transform: translateY(-2px); }
-
-        /* ── HOW IT WORKS ── */
-        .how {
-          padding: 100px 7%;
-          background: var(--ink);
-          border-radius: 0;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .how::before {
-          content: '';
-          position: absolute;
-          width: 400px; height: 400px;
-          background: #6C63FF;
-          border-radius: 50%;
-          top: -150px; right: -100px;
-          filter: blur(100px);
-          opacity: .25;
-        }
-
-        .how::after {
-          content: '';
-          position: absolute;
-          width: 300px; height: 300px;
-          background: #00C9A7;
-          border-radius: 50%;
-          bottom: -100px; left: -80px;
-          filter: blur(80px);
-          opacity: .2;
-        }
-
-        .how .sec-eyebrow { background: rgba(255,255,255,.08); color: #A89FFF; border-color: rgba(255,255,255,.15); }
-        .how .sec-title { color: white; }
-        .how .sec-sub { color: rgba(255,255,255,.55); }
-
-        .steps-grid {
-          display: grid;
-          grid-template-columns: repeat(4,1fr);
-          gap: 20px;
-          margin-top: 64px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .step-card {
-          background: rgba(255,255,255,.06);
-          border: 1.5px solid rgba(255,255,255,.1);
-          border-radius: 28px;
-          padding: 32px 26px;
-          position: relative;
-          transition: background .2s;
-        }
-        .step-card:hover { background: rgba(255,255,255,.1); }
-
-        .step-num {
-          font-family: 'Syne', sans-serif;
-          font-size: 48px;
-          font-weight: 800;
-          opacity: .12;
-          color: white;
-          position: absolute;
-          top: 16px; right: 22px;
-          line-height: 1;
-        }
-
-        .step-icon {
-          font-size: 36px;
-          margin-bottom: 20px;
-          display: block;
-        }
-
-        .step-card h4 {
-          font-family: 'Syne', sans-serif;
-          font-size: 17px;
-          font-weight: 800;
-          color: white;
-          margin-bottom: 10px;
-        }
-
-        .step-card p { font-size: 14px; color: rgba(255,255,255,.55); line-height: 1.7; font-weight: 500; }
-
-        .step-connector {
-          position: absolute;
-          top: 50%;
-          right: -14px;
-          transform: translateY(-50%);
-          color: rgba(255,255,255,.25);
-          font-size: 22px;
-          z-index: 2;
-        }
-
-        /* ── CTA ── */
-        .cta {
-          margin: 80px 7%;
-          padding: 96px 64px;
-          border-radius: var(--r-xl);
-          background: linear-gradient(135deg, #FF8C42 0%, #FF6B6B 35%, #C45CFF 70%, #7C6FCD 100%);
-          text-align: center;
-          color: white;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .cta-ring-1 {
-          position: absolute;
-          width: 360px; height: 360px;
-          border: 48px solid rgba(255,255,255,.1);
-          border-radius: 50%;
-          top: -140px; right: -100px;
-        }
-
-        .cta-ring-2 {
-          position: absolute;
-          width: 240px; height: 240px;
-          border: 32px solid rgba(255,255,255,.07);
-          border-radius: 50%;
-          bottom: -80px; left: -60px;
-        }
-
-        .cta-ring-3 {
-          position: absolute;
-          width: 160px; height: 160px;
-          border: 24px solid rgba(255,255,255,.08);
-          border-radius: 50%;
-          bottom: 40px; right: 180px;
-        }
-
-        .cta-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: rgba(255,255,255,.2);
-          border: 1.5px solid rgba(255,255,255,.3);
-          border-radius: 999px;
-          padding: 10px 22px;
-          font-size: 13px;
-          font-weight: 700;
-          color: white;
-          margin-bottom: 32px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .cta h2 {
-          font-family: 'Syne', sans-serif;
-          font-size: 64px;
-          font-weight: 800;
-          letter-spacing: -2.5px;
-          line-height: 1.08;
-          margin-bottom: 22px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .cta p {
-          font-size: 18px;
-          opacity: .88;
-          margin-bottom: 48px;
-          font-weight: 500;
-          max-width: 480px;
-          margin-left: auto;
-          margin-right: auto;
-          position: relative;
-          z-index: 1;
-        }
-
-        .cta-buttons {
-          display: flex;
-          gap: 16px;
-          justify-content: center;
-          flex-wrap: wrap;
-          position: relative;
-          z-index: 1;
-        }
-
-        .cta-btn-white {
-          background: white;
-          color: #6C63FF;
-          border: none;
-          padding: 19px 44px;
-          border-radius: 999px;
-          font-size: 16px;
-          font-weight: 800;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          box-shadow: 0 12px 32px rgba(0,0,0,.15);
-          transition: transform .25s, box-shadow .25s;
-        }
-        .cta-btn-white:hover { transform: translateY(-4px); box-shadow: 0 20px 44px rgba(0,0,0,.2); }
-
-        .cta-btn-outline {
-          background: transparent;
-          color: white;
-          border: 2px solid rgba(255,255,255,.45);
-          padding: 17px 40px;
-          border-radius: 999px;
-          font-size: 16px;
-          font-weight: 700;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          transition: border-color .2s, background .2s;
-        }
-        .cta-btn-outline:hover { border-color: white; background: rgba(255,255,255,.12); }
-
-        /* ── FOOTER ── */
-        .footer {
-          background: var(--ink);
-          padding: 56px 7% 36px;
-        }
-
-        .footer-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 48px;
-          flex-wrap: wrap;
-          padding-bottom: 48px;
-          border-bottom: 1px solid rgba(255,255,255,.1);
-          margin-bottom: 32px;
-        }
-
-        .footer-brand h2 {
-          font-family: 'Syne', sans-serif;
-          font-size: 28px;
-          font-weight: 800;
-          color: white;
-          margin-bottom: 10px;
-        }
-
-        .footer-brand p { font-size: 14px; color: rgba(255,255,255,.45); font-weight: 500; max-width: 240px; line-height: 1.7; }
-
-        .footer-links h5 {
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: rgba(255,255,255,.35);
-          margin-bottom: 18px;
-        }
-
-        .footer-links ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
-
-        .footer-links a {
-          text-decoration: none;
-          font-size: 14px;
-          color: rgba(255,255,255,.6);
-          font-weight: 500;
-          transition: color .2s;
-        }
-
-        .footer-links a:hover { color: white; }
-
-        .footer-bottom {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-
-        .footer-bottom p { font-size: 13px; color: rgba(255,255,255,.3); font-weight: 500; }
-
-        .footer-chips { display: flex; gap: 10px; }
-
-        .footer-chip {
-          font-size: 11px;
-          font-weight: 700;
-          padding: 6px 14px;
-          border-radius: 999px;
-          border: 1px solid rgba(255,255,255,.12);
-          color: rgba(255,255,255,.45);
-        }
-
-        /* ── RESPONSIVE ── */
-        @media(max-width:1100px) {
-          .hero h1 { font-size: 62px; }
-          .features-layout { grid-template-columns: 1fr; }
-          .features-preview { position: static; }
-          .steps-grid { grid-template-columns: repeat(2,1fr); }
-          .trip-grid { grid-template-columns: repeat(2,1fr); }
-        }
-
-        @media(max-width:820px) {
-          .hero { flex-direction: column; padding: 80px 6% 72px; text-align: center; }
-          .hero h1 { font-size: 52px; }
-          .hero-sub { margin: 0 auto; }
-          .hero-actions { justify-content: center; }
-          .hero-trust { justify-content: center; }
-          .hero-card-wrap { max-width: 380px; }
-          .sec-title { font-size: 40px; }
-          .cta h2 { font-size: 44px; }
-          .stats-strip { flex-direction: column; gap: 24px; padding: 36px 32px; }
-          .stat-divider { display: none; }
-          .trip-grid { grid-template-columns: 1fr; }
-          .steps-grid { grid-template-columns: 1fr 1fr; }
-          .trips-header { flex-direction: column; align-items: flex-start; }
-        }
-
-        @media(max-width:520px) {
-          .hero h1 { font-size: 40px; letter-spacing: -1.5px; }
-          .hero { padding: 72px 5% 60px; }
-          .sec-title { font-size: 32px; }
-          .cta { padding: 64px 28px; margin: 60px 5%; }
-          .cta h2 { font-size: 34px; }
-          .steps-grid { grid-template-columns: 1fr; }
-          .mini-card { display: none; }
-          .features, .trips, .how { padding: 72px 5%; }
-          .stats-strip { margin: 0 5%; border-radius: 24px; }
-        }
+        .deco-ring { width:120px;height:120px;border:14px solid #FFD4B3;border-radius:50%;top:12%;right:10%;animation:spin 18s linear infinite; }
+        .deco-dot-grid { width:140px;height:140px;top:62%;right:7%;background-image:radial-gradient(circle,#C5A8FF 1.5px,transparent 1.5px);background-size:18px 18px;opacity:.5; }
+        .deco-pill { width:60px;height:22px;background:#B3F5E6;border-radius:999px;bottom:18%;left:8%;opacity:.8; }
+        .deco-sq { width:44px;height:44px;background:#FFE499;border-radius:10px;bottom:28%;left:5%;transform:rotate(20deg);opacity:.7; }
+
+        /* hero card float */
+        .hero-float { animation: float 6s ease-in-out infinite; }
+        .mini-float-1 { animation: float 5s 1s ease-in-out infinite; }
+        .mini-float-2 { animation: float 7s 2s ease-in-out infinite; }
+        .fadein-1 { animation: fadein .7s ease both; }
+        .fadein-2 { animation: fadein .9s .2s ease both; }
+
+        /* exp rows */
+        .exp-row-hover:hover { transform: translateX(4px); }
+
+        /* feat row */
+        .feat-row-hover:not(.feat-active):hover { background:white; border-color:rgba(0,0,0,.05); }
+
+        /* step card */
+        .step-hover:hover { background: rgba(255,255,255,.1); }
+
+        /* trip card */
+        .trip-hover:hover { transform:translateY(-8px); box-shadow:0 24px 56px rgba(0,0,0,.1); }
+        .trip-hover:hover img { transform:scale(1.06); }
+
+        /* ai pulse */
+        .ai-dot { width:8px;height:8px;background:#7C6FCD;border-radius:50%;animation:pulse 2s infinite; }
       `}</style>
 
-      <div style={{width:'100%',overflow:'hidden'}}>
+      <div className="w-full overflow-x-hidden">
 
-        {/* ── HERO ── */}
-        <section className="hero">
+        {/* ═══════════════════════════════════════
+            HERO
+        ═══════════════════════════════════════ */}
+        <section className="relative min-h-screen flex items-center gap-16 px-[7%] py-20 overflow-hidden flex-col lg:flex-row">
           <div className="blob blob-1" />
           <div className="blob blob-2" />
           <div className="blob blob-3" />
           <div className="deco deco-ring" />
-          <div className="deco deco-dot-grid" />
-          <div className="deco deco-pill" />
-          <div className="deco deco-sq" />
+          <div className="deco deco-dot-grid hidden lg:block" />
+          <div className="deco deco-pill hidden md:block" />
+          <div className="deco deco-sq hidden md:block" />
 
-          <div className="hero-left">
-            <div className="hero-badge">
-              <div className="hero-badge-icon">✨</div>
+          {/* LEFT */}
+          <div className="relative z-10 flex-1 max-w-[600px] fadein-1 text-center lg:text-left mx-auto lg:mx-0">
+            <div className="inline-flex items-center gap-2.5 bg-white border border-[#E8D8FF] rounded-full px-5 py-2.5 text-[13px] font-bold text-[#5B3FBF] mb-8 shadow-[0_4px_20px_rgba(124,111,205,.12)]">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#9D7BFF] to-[#6C63FF] flex items-center justify-center text-sm">✨</div>
               AI-Powered Expense Platform
             </div>
 
-            <h1>
-              Split <em>Smarter</em>,<br />
+            <h1 className="syne text-5xl sm:text-[62px] lg:text-[80px] leading-[1.0] font-extrabold tracking-[-3px] text-[#1A1228] mb-7">
+              Split{" "}
+              <em className="not-italic relative inline-block">
+                Smarter
+                <span className="absolute bottom-1.5 left-0 right-0 h-3 bg-[#FFE480] rounded z-[-1] rotate-[-1deg]" />
+              </em>
+              ,<br />
               Travel Better.
             </h1>
 
-            <p className="hero-sub">
-              Track group trips, scan receipts with AI, split
-              expenses fairly and settle instantly with UPI — all in one beautiful app.
+            <p className="text-[17px] sm:text-lg leading-[1.8] text-[#4B4460] font-medium max-w-[520px] mx-auto lg:mx-0">
+              Track group trips, scan receipts with AI, split expenses fairly and settle instantly with UPI — all in one beautiful app.
             </p>
 
-            <div className="hero-actions">
-              <Link href="/groups" >
-              <button className="btn-primary">
+            <div className="flex gap-4 mt-11 flex-wrap items-center justify-center lg:justify-start">
+              {/* ✅ GET STARTED → navigates to /groups */}
+              <button
+                onClick={() => navigate("/groups")}
+                className="inline-flex items-center gap-2.5 bg-[#1A1228] text-white border-none px-9 py-[18px] rounded-full text-[15px] font-bold cursor-pointer transition-all duration-250 shadow-[0_8px_28px_rgba(26,18,40,.22)] hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(26,18,40,.28)]"
+              >
                 Start Free Trip
-                <div className="arrow-box">→</div>
+                <span className="w-[30px] h-[30px] bg-white/20 rounded-full flex items-center justify-center text-base">→</span>
               </button>
-              </Link>
-              <button className="btn-ghost">
-                <div className="play-icon">▶</div>
+
+              <button className="inline-flex items-center gap-2 bg-transparent text-[#1A1228] border-2 border-[rgba(26,18,40,0.08)] px-[30px] py-4 rounded-full text-[15px] font-bold cursor-pointer transition-all duration-200 hover:border-[#7C6FCD] hover:bg-[#F5F3FF]">
+                <span className="w-[26px] h-[26px] bg-[#1A1228] rounded-full flex items-center justify-center text-white text-[10px] pl-[2px]">▶</span>
                 Watch Demo
               </button>
             </div>
 
-            <div className="hero-trust">
-              <div className="avatar-stack">
-                <div className="avatar">R</div>
-                <div className="avatar av2">P</div>
-                <div className="avatar av3">S</div>
-                <div className="avatar av4">A</div>
+            <div className="flex items-center gap-3.5 mt-11 justify-center lg:justify-start">
+              <div className="flex">
+                {["R","P","S","A"].map((l,i) => (
+                  <div key={i} className={`w-[38px] h-[38px] rounded-full border-[2.5px] border-white -ml-2.5 first:ml-0 flex items-center justify-center text-[13px] font-extrabold text-white ${["bg-gradient-to-br from-[#FFB347] to-[#FF6B6B]","bg-gradient-to-br from-[#6C63FF] to-[#00C9A7]","bg-gradient-to-br from-[#FF6B6B] to-[#E040FB]","bg-gradient-to-br from-[#2ECC71] to-[#FFB347]"][i]}`}>{l}</div>
+                ))}
               </div>
-              <p className="trust-text"><strong>10,000+</strong> trips managed this month</p>
+              <p className="text-sm font-semibold text-[#4B4460]"><strong className="text-[#1A1228]">10,000+</strong> trips managed this month</p>
             </div>
           </div>
 
-          <div className="hero-right">
-            <div style={{position:'relative',width:'100%',maxWidth:'440px'}}>
+          {/* RIGHT — card */}
+          <div className="relative z-10 flex-1 flex justify-center fadein-2 w-full lg:w-auto">
+            <div className="relative w-full max-w-[440px] mx-auto">
 
-              <div className="mini-card mini-card-1">
-                <div className="mini-label">Total Saved</div>
-                <div className="mini-value">₹8,400</div>
-                <div className="mini-sub">↑ 24% vs last trip</div>
+              {/* mini card top-left */}
+              <div className="mini-float-1 absolute -top-[18px] -left-[30px] bg-white rounded-[18px] px-[18px] py-3.5 border border-[rgba(0,0,0,.07)] shadow-[0_12px_32px_rgba(0,0,0,.1)] z-30 whitespace-nowrap hidden sm:block">
+                <div className="text-[11px] font-bold text-[#9188A8] mb-1">Total Saved</div>
+                <div className="syne text-lg font-extrabold text-[#1A1228]">₹8,400</div>
+                <div className="text-[11px] font-bold text-[#00C896] mt-0.5">↑ 24% vs last trip</div>
               </div>
 
-              <div className="mini-card mini-card-2">
-                <div className="mini-label">Settlement Rate</div>
-                <div className="mini-value">99%</div>
-                <div className="mini-sub">✓ All settled in 2 hrs</div>
+              {/* mini card bottom-right */}
+              <div className="mini-float-2 absolute bottom-[30px] -right-[24px] bg-white rounded-[18px] px-[18px] py-3.5 border border-[rgba(0,0,0,.07)] shadow-[0_12px_32px_rgba(0,0,0,.1)] z-30 whitespace-nowrap hidden sm:block">
+                <div className="text-[11px] font-bold text-[#9188A8] mb-1">Settlement Rate</div>
+                <div className="syne text-lg font-extrabold text-[#1A1228]">99%</div>
+                <div className="text-[11px] font-bold text-[#00C896] mt-0.5">✓ All settled in 2 hrs</div>
               </div>
 
-              <div className="hero-card-wrap">
-                <div className="expense-card">
-                  <div className="card-header">
-                    <div className="card-title-row">
-                      <h3>🏖️ Goa Beach Trip</h3>
-                      <p>6 Friends · 5 Days</p>
-                    </div>
-                    <div className="status-chip">✅ On Budget</div>
+              {/* main expense card */}
+              <div className="hero-float bg-white rounded-[48px] p-8 border border-[rgba(0,0,0,.06)] shadow-[0_32px_80px_rgba(26,18,40,.12),0_2px_8px_rgba(0,0,0,.04)]">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 className="syne text-xl font-extrabold text-[#1A1228] mb-1">🏖️ Goa Beach Trip</h3>
+                    <p className="text-[13px] text-[#9188A8] font-medium">6 Friends · 5 Days</p>
                   </div>
+                  <div className="bg-[#E8FBF4] text-[#006B50] border border-[#A3EDD0] px-3.5 py-[7px] rounded-full text-xs font-bold whitespace-nowrap">✅ On Budget</div>
+                </div>
 
-                  <div className="exp-row purple">
-                    <div>
-                      <div className="exp-label">🍽️ Beach Dinner</div>
-                      <div className="exp-sub">AI split by consumed items</div>
-                    </div>
-                    <div>
-                      <div className="exp-amount">₹4,200</div>
-                      <span className="tag-settled">Settled</span>
-                    </div>
+                <div className="flex justify-between items-center px-[18px] py-4 rounded-[18px] mb-3 bg-[#F0EEFF] transition-transform duration-200 exp-row-hover">
+                  <div>
+                    <div className="text-sm font-bold text-[#1A1228] mb-1">🍽️ Beach Dinner</div>
+                    <div className="text-xs text-[#9188A8] font-medium">AI split by consumed items</div>
                   </div>
+                  <div className="text-right">
+                    <div className="syne text-lg font-extrabold text-[#1A1228] mb-1">₹4,200</div>
+                    <span className="text-[11px] font-bold text-[#006B50] bg-[#D4F7EA] px-2.5 py-0.5 rounded-full">Settled</span>
+                  </div>
+                </div>
 
-                  <div className="exp-row orange">
-                    <div>
-                      <div className="exp-label">🛵 Scooter Rental</div>
-                      <div className="exp-sub">Shared among 3 members</div>
-                    </div>
-                    <div>
-                      <div className="exp-amount">₹2,800</div>
-                      <span className="tag-pending">Pending</span>
-                    </div>
+                <div className="flex justify-between items-center px-[18px] py-4 rounded-[18px] mb-4 bg-[#FFF4E6] transition-transform duration-200 exp-row-hover">
+                  <div>
+                    <div className="text-sm font-bold text-[#1A1228] mb-1">🛵 Scooter Rental</div>
+                    <div className="text-xs text-[#9188A8] font-medium">Shared among 3 members</div>
                   </div>
+                  <div className="text-right">
+                    <div className="syne text-lg font-extrabold text-[#1A1228] mb-1">₹2,800</div>
+                    <span className="text-[11px] font-bold text-[#A34800] bg-[#FFE8CC] px-2.5 py-0.5 rounded-full">Pending</span>
+                  </div>
+                </div>
 
-                  <div className="ai-insight">
-                    <div className="ai-insight-head">
-                      <div className="ai-dot" />
-                      🧠 AI Insight
-                    </div>
-                    <p>Food expenses 18% above average. Consider reducing café visits tomorrow to stay within budget.</p>
+                <div className="bg-gradient-to-br from-[#F0EEFF] to-[#E8F8FF] border border-[#D4CCFF] rounded-[20px] p-[18px]">
+                  <div className="flex items-center gap-2 text-[13px] font-extrabold text-[#3D2DBF] mb-2.5">
+                    <div className="ai-dot" />
+                    🧠 AI Insight
                   </div>
+                  <p className="text-[13px] text-[#3D2DBF] font-medium leading-[1.7]">Food expenses 18% above average. Consider reducing café visits tomorrow to stay within budget.</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── STATS STRIP ── */}
-        <div className="stats-strip">
-          <div className="stat-item">
-            <div className="stat-num c1">10K+</div>
-            <div className="stat-desc">Trips Managed</div>
-          </div>
-          <div className="stat-divider" />
-          <div className="stat-item">
-            <div className="stat-num c2">₹1.2Cr</div>
-            <div className="stat-desc">Expenses Tracked</div>
-          </div>
-          <div className="stat-divider" />
-          <div className="stat-item">
-            <div className="stat-num c3">99%</div>
-            <div className="stat-desc">Faster Settlements</div>
-          </div>
-          <div className="stat-divider" />
-          <div className="stat-item">
-            <div className="stat-num" style={{color:'#FF6B6B'}}>4.9★</div>
-            <div className="stat-desc">Average Rating</div>
-          </div>
+        {/* ═══════════════════════════════════════
+            STATS STRIP
+        ═══════════════════════════════════════ */}
+        <div className="mx-[5%] sm:mx-[7%] bg-[#1A1228] rounded-[32px] px-8 sm:px-12 py-11 flex justify-between items-center gap-8 flex-wrap">
+          {[
+            { num:"10K+", color:"#FFB347", desc:"Trips Managed" },
+            { num:"₹1.2Cr", color:"#00C9A7", desc:"Expenses Tracked" },
+            { num:"99%", color:"#9D7BFF", desc:"Faster Settlements" },
+            { num:"4.9★", color:"#FF6B6B", desc:"Average Rating" },
+          ].map((s,i,arr) => (
+            <>
+              <div key={i} className="text-center flex-1 min-w-[120px]">
+                <div className="syne text-[46px] font-extrabold mb-1.5" style={{color:s.color}}>{s.num}</div>
+                <div className="text-sm text-white/55 font-medium">{s.desc}</div>
+              </div>
+              {i < arr.length-1 && <div key={`d${i}`} className="w-px h-[60px] bg-white/10 hidden sm:block" />}
+            </>
+          ))}
         </div>
 
-        {/* ── FEATURES ── */}
-        <section className="features">
-          <div className="sec-eyebrow">⚡ Why Choose Us</div>
-          <h2 className="sec-title">More Than <span>Splitwise</span></h2>
-          <p className="sec-sub">Everything your group needs — from AI receipt scanning to instant UPI settlement.</p>
+        {/* ═══════════════════════════════════════
+            FEATURES
+        ═══════════════════════════════════════ */}
+        <section className="px-[5%] sm:px-[7%] py-24 relative overflow-hidden">
+          <div className="inline-flex items-center gap-2 text-xs font-extrabold tracking-[2px] uppercase text-[#7C6FCD] bg-[#F0EEFF] border border-[#D4CCFF] px-[18px] py-2 rounded-full mb-5">⚡ Why Choose Us</div>
+          <h2 className="syne text-4xl sm:text-5xl lg:text-[54px] font-extrabold tracking-[-2px] text-[#1A1228] leading-[1.1] mb-3.5">More Than <span className="text-[#FF6B6B]">Splitwise</span></h2>
+          <p className="text-[17px] text-[#4B4460] font-medium max-w-[480px] leading-[1.75]">Everything your group needs — from AI receipt scanning to instant UPI settlement.</p>
 
-          <div className="features-layout">
-            <div className="features-list">
-              {features.map((f, i) => (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mt-16">
+            {/* list */}
+            <div className="flex flex-col gap-3">
+              {features.map((f,i) => (
                 <div
                   key={i}
-                  className={`feat-row${activeFeature === i ? ' active' : ''}`}
+                  className={`flex items-start gap-5 px-6 py-6 rounded-3xl border-[1.5px] cursor-pointer transition-all duration-250 feat-row-hover ${activeFeature===i ? "feat-active shadow-[0_8px_32px_rgba(0,0,0,.08)]" : "border-transparent"}`}
+                  style={activeFeature===i ? {background:f.bg, borderColor:"rgba(0,0,0,.08)"} : {background:"white"}}
                   onClick={() => setActiveFeature(i)}
-                  style={activeFeature === i ? {background: f.bg, borderColor: 'rgba(0,0,0,.08)'} : {}}
                 >
-                  <div className="feat-icon-wrap" style={{background: f.pill}}>
-                    {f.icon}
-                  </div>
-                  <div className="feat-text">
-                    <h4>{f.title}</h4>
-                    {activeFeature === i && <p>{f.desc}</p>}
+                  <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center text-[26px] flex-shrink-0" style={{background:f.pill}}>{f.icon}</div>
+                  <div>
+                    <h4 className="syne text-[17px] font-extrabold mb-1.5 text-[#1A1228]">{f.title}</h4>
+                    {activeFeature===i && <p className="text-sm text-[#4B4460] leading-[1.7] font-medium">{f.desc}</p>}
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="features-preview">
+            {/* preview */}
+            <div className="lg:sticky lg:top-10">
               <div
-                className="feat-preview-card"
-                style={{background: features[activeFeature].bg, color: features[activeFeature].pillText}}
+                className="rounded-[36px] px-10 py-11 min-h-[380px] flex flex-col justify-center relative overflow-hidden transition-all duration-400"
+                style={{background:af.bg, color:af.pillText}}
               >
-                <div
-                  className="feat-preview-pill"
-                  style={{background: features[activeFeature].pill, color: features[activeFeature].pillText}}
-                >
-                  #{activeFeature + 1} Feature
-                </div>
-                <div className="feat-big-icon">{features[activeFeature].icon}</div>
-                <div className="feat-preview-title">{features[activeFeature].title}</div>
-                <div className="feat-preview-desc">{features[activeFeature].desc}</div>
+                <div className="absolute w-[200px] h-[200px] rounded-full bg-white/40 -bottom-[60px] -right-[60px]" />
+                <div className="absolute w-[120px] h-[120px] rounded-full bg-white/25 top-5 -left-[30px]" />
+                <div className="inline-block px-5 py-2 rounded-full text-xs font-extrabold mb-7 relative z-10" style={{background:af.pill, color:af.pillText}}>#{activeFeature+1} Feature</div>
+                <div className="text-7xl mb-7 relative z-10">{af.icon}</div>
+                <div className="syne text-[28px] font-extrabold mb-3.5 relative z-10">{af.title}</div>
+                <div className="text-base leading-[1.8] font-medium opacity-80 relative z-10">{af.desc}</div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── TRIPS ── */}
-        <section className="trips">
-          <div className="trips-header">
+        {/* ═══════════════════════════════════════
+            TRIPS
+        ═══════════════════════════════════════ */}
+        <section className="px-[5%] sm:px-[7%] py-24 bg-white relative overflow-hidden">
+          <div className="absolute w-[500px] h-[500px] rounded-full bg-[#FFF0FA] -top-[160px] -right-[120px] blur-[80px] opacity-70 pointer-events-none" />
+
+          <div className="flex justify-between items-end mb-14 flex-wrap gap-6 relative z-10">
             <div>
-              <div className="sec-eyebrow">🗺️ Popular Trips</div>
-              <h2 className="sec-title">Shared<br /><span style={{color:'#00C9A7'}}>Adventures</span></h2>
+              <div className="inline-flex items-center gap-2 text-xs font-extrabold tracking-[2px] uppercase text-[#7C6FCD] bg-[#F0EEFF] border border-[#D4CCFF] px-[18px] py-2 rounded-full mb-5">🗺️ Popular Trips</div>
+              <h2 className="syne text-4xl sm:text-5xl font-extrabold tracking-[-2px] text-[#1A1228] leading-[1.1]">Shared<br /><span className="text-[#00C9A7]">Adventures</span></h2>
             </div>
-            <button className="see-all-btn">See All Trips →</button>
+            <button className="inline-flex items-center gap-2 border-2 border-[rgba(26,18,40,0.08)] px-6 py-3 rounded-full text-sm font-bold text-[#1A1228] bg-transparent cursor-pointer transition-all hover:border-[#7C6FCD] hover:bg-[#F5F3FF]">See All Trips →</button>
           </div>
 
-          <div className="trip-grid">
-            {trips.map((trip, i) => (
-              <div className="trip-card" key={i}>
-                <div className="trip-img-wrap">
-                  <img src={trip.image} alt={trip.name} />
-                  <div
-                    className="trip-tag"
-                    style={{background: trip.tagBg, color: trip.tagColor}}
-                  >
-                    {trip.tag}
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+            {trips.map((trip,i) => (
+              <div key={i} className="bg-[#FEFAF4] rounded-[32px] overflow-hidden border border-[rgba(0,0,0,.06)] transition-all duration-300 trip-hover">
+                <div className="relative overflow-hidden">
+                  <img src={trip.image} alt={trip.name} className="w-full h-[210px] object-cover block transition-transform duration-400" />
+                  <div className="absolute top-4 left-4 px-3.5 py-[7px] rounded-full text-xs font-extrabold border border-[rgba(0,0,0,.06)]" style={{background:trip.tagBg, color:trip.tagColor}}>{trip.tag}</div>
                 </div>
-                <div className="trip-body">
-                  <h3>{trip.name}</h3>
-                  <div className="trip-meta">
-                    <span className="meta-chip">👥 {trip.members} Members</span>
-                    <span className="meta-chip">📅 {trip.days} Days</span>
-                    <span className="meta-chip amount">💰 {trip.amount}</span>
+                <div className="p-6">
+                  <h3 className="syne text-xl font-extrabold text-[#1A1228] mb-3.5">{trip.name}</h3>
+                  <div className="flex gap-2.5 mb-5 flex-wrap">
+                    <span className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-white border border-[rgba(0,0,0,.07)] text-[#4B4460]">👥 {trip.members} Members</span>
+                    <span className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-white border border-[rgba(0,0,0,.07)] text-[#4B4460]">📅 {trip.days} Days</span>
+                    <span className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-[#1A1228] border border-[#1A1228] text-white">💰 {trip.amount}</span>
                   </div>
-                  <button className="trip-open-btn">
-                    Open Trip →
-                  </button>
+                  <button className="w-full border-none py-3.5 rounded-[18px] bg-[#1A1228] text-white text-sm font-bold cursor-pointer flex items-center justify-center gap-2 transition-all hover:opacity-85 hover:-translate-y-0.5">Open Trip →</button>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── HOW IT WORKS ── */}
-        <section className="how">
-          <div className="sec-eyebrow">🚀 How It Works</div>
-          <h2 className="sec-title">Up & Running in<br /><span style={{color:'#FFB347'}}>4 Simple Steps</span></h2>
-          <p className="sec-sub">From creating a trip to settling debts — the whole flow takes under 2 minutes.</p>
+        {/* ═══════════════════════════════════════
+            HOW IT WORKS
+        ═══════════════════════════════════════ */}
+        <section className="px-[5%] sm:px-[7%] py-24 bg-[#1A1228] relative overflow-hidden">
+          <div className="absolute w-[400px] h-[400px] bg-[#6C63FF] rounded-full -top-[150px] -right-[100px] blur-[100px] opacity-25 pointer-events-none" />
+          <div className="absolute w-[300px] h-[300px] bg-[#00C9A7] rounded-full -bottom-[100px] -left-[80px] blur-[80px] opacity-20 pointer-events-none" />
 
-          <div className="steps-grid">
+          <div className="inline-flex items-center gap-2 text-xs font-extrabold tracking-[2px] uppercase text-[#A89FFF] bg-white/[.08] border border-white/[.15] px-[18px] py-2 rounded-full mb-5">🚀 How It Works</div>
+          <h2 className="syne text-4xl sm:text-5xl font-extrabold tracking-[-2px] text-white leading-[1.1] mb-3.5">Up & Running in<br /><span style={{color:"#FFB347"}}>4 Simple Steps</span></h2>
+          <p className="text-[17px] text-white/55 font-medium max-w-[480px] leading-[1.75]">From creating a trip to settling debts — the whole flow takes under 2 minutes.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-16 relative z-10">
             {[
-              { icon:'🧳', num:'01', title:'Create a Trip', desc:'Name your trip, set a budget and invite friends via link or phone number — no sign-up required for guests.' },
-              { icon:'🧾', num:'02', title:'Add Expenses', desc:'Scan a receipt with AI, enter manually, or let bank SMS auto-import transactions directly.' },
-              { icon:'🧠', num:'03', title:'AI Splits Fairly', desc:'Our model analyses who ordered what, consumption patterns and shared vs individual costs.' },
-              { icon:'💸', num:'04', title:'Settle via UPI', desc:'One tap generates personalised UPI payment links for each member. Debts vanish in seconds.' },
-            ].map((step, i) => (
-              <div className="step-card" key={i} style={{position:'relative'}}>
-                <div className="step-num">{step.num}</div>
-                <span className="step-icon">{step.icon}</span>
-                <h4>{step.title}</h4>
-                <p>{step.desc}</p>
+              { icon:"🧳", num:"01", title:"Create a Trip", desc:"Name your trip, set a budget and invite friends via link or phone number — no sign-up required for guests." },
+              { icon:"🧾", num:"02", title:"Add Expenses", desc:"Scan a receipt with AI, enter manually, or let bank SMS auto-import transactions directly." },
+              { icon:"🧠", num:"03", title:"AI Splits Fairly", desc:"Our model analyses who ordered what, consumption patterns and shared vs individual costs." },
+              { icon:"💸", num:"04", title:"Settle via UPI", desc:"One tap generates personalised UPI payment links for each member. Debts vanish in seconds." },
+            ].map((step,i) => (
+              <div key={i} className="relative bg-white/[.06] border border-white/10 rounded-[28px] p-8 transition-all step-hover">
+                <div className="syne text-[48px] font-extrabold text-white/10 absolute top-4 right-5 leading-none">{step.num}</div>
+                <span className="text-[36px] mb-5 block">{step.icon}</span>
+                <h4 className="syne text-[17px] font-extrabold text-white mb-2.5">{step.title}</h4>
+                <p className="text-sm text-white/55 leading-[1.7] font-medium">{step.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── CTA ── */}
-        <section className="cta">
-          <div className="cta-ring-1" />
-          <div className="cta-ring-2" />
-          <div className="cta-ring-3" />
+        {/* ═══════════════════════════════════════
+            CTA
+        ═══════════════════════════════════════ */}
+        <section className="mx-[5%] sm:mx-[7%] my-20 px-8 sm:px-16 py-24 rounded-[48px] bg-gradient-to-br from-[#FF8C42] via-[#FF6B6B] via-60% to-[#7C6FCD] text-center text-white relative overflow-hidden">
+          <div className="absolute w-[360px] h-[360px] border-[48px] border-white/10 rounded-full -top-[140px] -right-[100px]" />
+          <div className="absolute w-[240px] h-[240px] border-[32px] border-white/[.07] rounded-full -bottom-[80px] -left-[60px]" />
+          <div className="absolute w-[160px] h-[160px] border-[24px] border-white/[.08] rounded-full bottom-10 right-[180px]" />
 
-          <div className="cta-badge">🎉 Free forever for groups up to 10</div>
-
-          <h2>
-            Make Every Trip<br />Stress-Free.
-          </h2>
-
-          <p>Join thousands of friend groups, flatmates and travel crews who split smarter with AI.</p>
-
-          <div className="cta-buttons">
-            <button className="cta-btn-white">🚀 Create Your First Trip</button>
-            <button className="cta-btn-outline">Explore Features →</button>
+          <div className="inline-flex items-center gap-2 bg-white/20 border border-white/30 rounded-full px-5 py-2.5 text-[13px] font-bold text-white mb-8 relative z-10">🎉 Free forever for groups up to 10</div>
+          <h2 className="syne text-[34px] sm:text-[54px] lg:text-[64px] font-extrabold tracking-[-2.5px] leading-[1.08] mb-5 relative z-10">Make Every Trip<br />Stress-Free.</h2>
+          <p className="text-lg opacity-90 max-w-[480px] mx-auto font-medium mb-12 relative z-10">Join thousands of friend groups, flatmates and travel crews who split smarter with AI.</p>
+          <div className="flex gap-4 justify-center flex-wrap relative z-10">
+            <button
+              onClick={() => navigate("/groups")}
+              className="bg-white text-[#6C63FF] border-none px-11 py-5 rounded-full text-base font-extrabold cursor-pointer shadow-[0_12px_32px_rgba(0,0,0,.15)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_44px_rgba(0,0,0,.2)]"
+            >
+              🚀 Create Your First Trip
+            </button>
+            <button className="bg-transparent text-white border-2 border-white/45 px-10 py-[17px] rounded-full text-base font-bold cursor-pointer transition-all hover:border-white hover:bg-white/12">Explore Features →</button>
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
-        <footer className="footer">
-          <div className="footer-top">
-            <div className="footer-brand">
-              <h2>✈️ SplitTrip</h2>
-              <p>AI-powered expense splitting for modern travelers and friend groups.</p>
+        {/* ═══════════════════════════════════════
+            FOOTER
+        ═══════════════════════════════════════ */}
+        <footer className="bg-[#1A1228] px-[5%] sm:px-[7%] pt-14 pb-9">
+          <div className="flex justify-between items-start gap-12 flex-wrap pb-12 border-b border-white/10 mb-8">
+            <div>
+              <h2 className="syne text-[28px] font-extrabold text-white mb-2.5">✈️ SplitTrip</h2>
+              <p className="text-sm text-white/45 font-medium max-w-[240px] leading-[1.7]">AI-powered expense splitting for modern travelers and friend groups.</p>
             </div>
-
-            <div className="footer-links">
-              <h5>Product</h5>
-              <ul>
-                <li><a href="#">Features</a></li>
-                <li><a href="#">Pricing</a></li>
-                <li><a href="#">API Docs</a></li>
-                <li><a href="#">Changelog</a></li>
-              </ul>
-            </div>
-
-            <div className="footer-links">
-              <h5>Company</h5>
-              <ul>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Blog</a></li>
-                <li><a href="#">Careers</a></li>
-                <li><a href="#">Press</a></li>
-              </ul>
-            </div>
-
-            <div className="footer-links">
-              <h5>Support</h5>
-              <ul>
-                <li><a href="#">Help Center</a></li>
-                <li><a href="#">Community</a></li>
-                <li><a href="#">Contact</a></li>
-                <li><a href="#">Status</a></li>
-              </ul>
-            </div>
+            {[
+              { title:"Product", links:["Features","Pricing","API Docs","Changelog"] },
+              { title:"Company", links:["About","Blog","Careers","Press"] },
+              { title:"Support", links:["Help Center","Community","Contact","Status"] },
+            ].map((col,i) => (
+              <div key={i}>
+                <h5 className="text-xs font-extrabold tracking-[2px] uppercase text-white/35 mb-[18px]">{col.title}</h5>
+                <ul className="flex flex-col gap-3 list-none">
+                  {col.links.map((l,j) => <li key={j}><a href="#" className="text-sm text-white/60 font-medium no-underline transition-colors hover:text-white">{l}</a></li>)}
+                </ul>
+              </div>
+            ))}
           </div>
-
-          <div className="footer-bottom">
-            <p>© 2025 SplitTrip. Made with ❤️ for travellers everywhere.</p>
-            <div className="footer-chips">
-              <span className="footer-chip">Privacy</span>
-              <span className="footer-chip">Terms</span>
-              <span className="footer-chip">Cookies</span>
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <p className="text-[13px] text-white/30 font-medium">© 2025 SplitTrip. Made with ❤️ for travellers everywhere.</p>
+            <div className="flex gap-2.5">
+              {["Privacy","Terms","Cookies"].map(c => (
+                <span key={c} className="text-[11px] font-bold px-3.5 py-1.5 rounded-full border border-white/12 text-white/45">{c}</span>
+              ))}
             </div>
           </div>
         </footer>

@@ -4,340 +4,88 @@ import { useNavigate, useParams } from "react-router-dom";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-const css = `
+const CATS = [
+  { v: "Food", e: "🍽️" },
+  { v: "Travel", e: "✈️" },
+  { v: "Hotel", e: "🏨" },
+  { v: "Shopping", e: "🛍️" },
+  { v: "Fuel", e: "⛽" },
+  { v: "Entertainment", e: "🎉" },
+  { v: "Other", e: "💳" },
+  { v: "Drinks", e: "🍻" },
+];
+const COLORS = [
+  "#7c3aed",
+  "#0ea5e9",
+  "#f59e0b",
+  "#f43f5e",
+  "#10b981",
+  "#ec4899",
+  "#6366f1",
+  "#0d9488",
+];
+
+const fileToBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&display=swap');
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .font-outfit { font-family: 'Outfit', sans-serif; }
+  .font-fraunces { font-family: 'Fraunces', serif; }
 
-  :root {
-    --indigo:      #4f46e5;
-    --indigo-d:    #3730a3;
-    --violet:      #7c3aed;
-    --sky:         #0ea5e9;
-    --amber:       #f59e0b;
-    --rose:        #f43f5e;
-    --emerald:     #10b981;
-    --pink:        #ec4899;
-    --teal:        #0d9488;
-    --white:       #ffffff;
-    --bg:          #f3f2ff;
-    --card:        #ffffff;
-    --ink:         #0f172a;
-    --ink2:        #475569;
-    --ink3:        #94a3b8;
-    --border:      #e8e4ff;
-    --indigo-lt:   #eef2ff;
-    --indigo-md:   #c7d2fe;
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-
-  @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1)} }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
   @keyframes scanLine {
-    0%   { top: 0%; opacity: 1; }
+    0%   { top: 0%;  opacity: 1; }
     50%  { top: 90%; opacity: 1; }
-    100% { top: 0%; opacity: 0; }
+    100% { top: 0%;  opacity: 0; }
   }
-  @keyframes popIn { from{opacity:0;transform:scale(.92)} to{opacity:1;transform:scale(1)} }
-
-  .ep-root {
-    min-height: 100vh; background: var(--bg);
-    font-family: 'Outfit', sans-serif; color: var(--ink);
-    display: flex; justify-content: center; padding-bottom: 110px;
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(.92); }
+    to   { opacity: 1; transform: scale(1); }
   }
-  .ep-shell {
-    width: 100%; max-width: 480px; background: var(--card);
-    position: relative; animation: fadeUp .45s ease both;
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 
-  /* HEADER */
-  .ep-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px; background: var(--white);
-    border-bottom: 1.5px solid var(--border);
-    position: sticky; top: 0; z-index: 30;
-  }
-  .ep-back {
-    width: 36px; height: 36px; border-radius: 12px;
-    background: var(--indigo-lt); border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--indigo); transition: background .15s, transform .15s;
-  }
-  .ep-back:hover { background: var(--indigo-md); transform: translateX(-2px); }
-  .ep-header-title {
-    font-family: 'Fraunces', serif; font-size: 17px; font-weight: 900;
-    color: var(--ink); letter-spacing: -0.3px;
-  }
-  .ep-menu-btn {
-    width: 36px; height: 36px; border-radius: 12px;
-    background: var(--indigo-lt); border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--ink2); font-size: 18px;
-  }
+  .anim-fadeUp  { animation: fadeUp .45s ease both; }
+  .anim-popIn   { animation: popIn .3s ease; }
+  .anim-pop     { animation: pop .3s ease; }
 
-  /* GROUP BANNER */
-  .ep-group-banner {
-    display: flex; align-items: center; gap: 12px; padding: 10px 16px;
-    background: linear-gradient(90deg,#eef2ff 0%,#faf5ff 100%);
-    border-bottom: 1.5px solid var(--border);
-  }
-  .ep-group-img {
-    width: 44px; height: 38px; border-radius: 10px; object-fit: cover;
-    border: 2px solid var(--white); box-shadow: 0 2px 8px rgba(79,70,229,.18); flex-shrink: 0;
-  }
-  .ep-group-name { font-size: 13px; font-weight: 800; color: var(--ink); }
-  .ep-group-meta { display: flex; gap: 8px; margin-top: 3px; flex-wrap: wrap; }
-  .ep-group-chip {
-    font-size: 10px; font-weight: 700; color: var(--indigo);
-    background: var(--indigo-lt); border-radius: 6px; padding: 2px 8px; letter-spacing: .3px;
-  }
-
-  /* AMOUNT HERO */
-  .ep-hero {
-    background: linear-gradient(145deg,#4338ca 0%,#6d28d9 50%,#7c3aed 100%);
-    padding: 24px 20px 20px; position: relative; overflow: hidden;
-  }
-  .ep-hero-orb1 { position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none; }
-  .ep-hero-orb2 { position:absolute;bottom:-40px;left:-20px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none; }
-  .ep-hero-orb3 { position:absolute;top:20px;left:50%;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none; }
-  .ep-hero-label { font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:6px;position:relative;z-index:1; }
-  .ep-hero-amt-row { display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;margin-bottom:16px; }
-  .ep-hero-amt-left { display:flex;align-items:baseline;gap:4px; }
-  .ep-hero-rs { font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:rgba(255,255,255,.75);line-height:1; }
-  .ep-hero-input {
-    font-family:'Fraunces',serif;font-size:52px;font-weight:900;
-    color:#fff;background:none;border:none;outline:none;
-    width:210px;letter-spacing:-3px;line-height:1;caret-color:rgba(255,255,255,.8);
-  }
-  .ep-hero-input::placeholder { color:rgba(255,255,255,.35); }
-  .ep-currency-pill {
-    background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.28);
-    border-radius:10px;padding:8px 16px;font-size:12px;font-weight:800;color:#fff;
-    cursor:pointer;backdrop-filter:blur(8px);letter-spacing:.8px;position:relative;z-index:1;
-  }
-  .ep-quick-row { display:flex;gap:8px;position:relative;z-index:1;overflow-x:auto;padding-bottom:2px; }
-  .ep-quick-row::-webkit-scrollbar { display:none; }
-  .ep-quick-chip {
-    flex-shrink:0;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.22);
-    border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;color:rgba(255,255,255,.9);
-    cursor:pointer;transition:background .15s,transform .15s;backdrop-filter:blur(6px);
-  }
-  .ep-quick-chip:hover { background:rgba(255,255,255,.26);transform:translateY(-2px); }
-  .ep-per-strip {
-    display:flex;align-items:center;justify-content:space-between;
-    background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.18);
-    border-radius:12px;padding:10px 16px;margin-top:14px;position:relative;z-index:1;backdrop-filter:blur(6px);
-  }
-  .ep-per-label { font-size:11px;font-weight:600;color:rgba(255,255,255,.7); }
-  .ep-per-val   { font-family:'Fraunces',serif;font-size:18px;font-weight:900;color:#fff; }
-  .ep-per-sub   { font-size:10px;color:rgba(255,255,255,.55);margin-top:1px; }
-
-  /* SECTION LABEL */
-  .ep-sec {
-    padding:16px 16px 10px;font-size:10px;font-weight:700;letter-spacing:1.1px;
-    text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:10px;
-  }
-  .ep-sec::after { content:'';flex:1;height:1.5px;background:linear-gradient(90deg,var(--border),transparent); }
-
-  /* FORM FIELDS */
-  .ep-form { padding:0 16px; }
-  .ep-field-wrap { position:relative;margin-bottom:12px; }
-  .ep-field-icon { position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none; }
-  .ep-input, .ep-textarea {
-    width:100%;border:1.5px solid var(--border);border-radius:12px;
-    padding:13px 14px 13px 40px;outline:none;background:#fafafe;
-    font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--ink);
-    box-sizing:border-box;transition:border-color .15s,box-shadow .15s,background .15s;
-  }
-  .ep-input:focus, .ep-textarea:focus { border-color:var(--indigo);box-shadow:0 0 0 3px rgba(79,70,229,.1);background:var(--white); }
-  .ep-input::placeholder, .ep-textarea::placeholder { color:var(--ink3);font-weight:500; }
-  .ep-textarea { min-height:80px;resize:none;padding-top:13px;line-height:1.5; }
-
-  /* CATEGORY GRID */
-  .ep-cat-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px;margin-bottom:4px; }
-  .ep-cat-item {
-    display:flex;flex-direction:column;align-items:center;gap:5px;
-    padding:12px 6px 10px;border:1.5px solid var(--border);border-radius:14px;
-    background:#fafafe;cursor:pointer;font-size:10px;font-weight:700;color:var(--ink2);
-    transition:all .18s;font-family:'Outfit',sans-serif;
-  }
-  .ep-cat-item .ci { font-size:22px; }
-  .ep-cat-item:hover { border-color:var(--indigo);background:var(--indigo-lt);color:var(--indigo);transform:translateY(-2px);box-shadow:0 4px 12px rgba(79,70,229,.15); }
-  .ep-cat-item.sel { border-color:var(--indigo);background:var(--indigo-lt);color:var(--indigo);box-shadow:0 0 0 3px rgba(79,70,229,.12); }
-  .ep-cat-item.sel .ci { animation:pop .3s ease; }
-
-  /* ── AI SCAN AREA ── */
-  .ep-scan-wrap { margin: 0 16px 4px; }
-
-  .ep-scan-btn {
-    width: 100%; padding: 16px;
-    background: linear-gradient(135deg, #0d9488, #2dd4bf);
-    border: none; border-radius: 16px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; color: #fff;
-    box-shadow: 0 6px 20px rgba(13,148,136,.35);
-    transition: transform .2s, box-shadow .2s;
-    margin-bottom: 10px;
-  }
-  .ep-scan-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(13,148,136,.45); }
-  .ep-scan-btn:disabled { opacity: .65; cursor: not-allowed; }
-
-  .ep-scan-preview-wrap {
-    position: relative; border-radius: 14px; overflow: hidden;
-    border: 2px solid var(--indigo-md); margin-bottom: 10px;
-  }
-  .ep-scan-preview-img { width: 100%; display: block; max-height: 200px; object-fit: cover; }
-  .ep-scan-overlay {
-    position: absolute; inset: 0;
-    background: rgba(79,70,229,.55);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-  }
-  .ep-scan-spinner {
-    width: 40px; height: 40px; border-radius: 50%;
-    border: 4px solid rgba(255,255,255,.3); border-top-color: #fff;
-    animation: spin 1s linear infinite;
-  }
-  .ep-scan-line {
-    position: absolute; left: 0; right: 0; height: 2px;
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
     background: linear-gradient(90deg, transparent, #fff, transparent);
     animation: scanLine 1.8s ease-in-out infinite;
   }
-  .ep-scan-status { font-size: 13px; font-weight: 700; color: #fff; }
-
-  /* AI RESULT CARD */
-  .ep-ai-result {
-    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-    border: 2px solid #86efac; border-radius: 16px;
-    padding: 16px; margin-bottom: 10px;
-    animation: popIn .3s ease;
+  .scan-spinner {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 4px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    animation: spin 1s linear infinite;
   }
-  .ep-ai-result-title {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 12px; font-weight: 800; color: #16a34a;
-    letter-spacing: .5px; text-transform: uppercase; margin-bottom: 12px;
-  }
-  .ep-ai-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-  .ep-ai-result-item { background: #fff; border-radius: 10px; padding: 10px 12px; border: 1px solid #bbf7d0; }
-  .ep-ai-result-label { font-size: 10px; font-weight: 700; color: #86efac; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
-  .ep-ai-result-val   { font-size: 14px; font-weight: 800; color: #14532d; }
-  .ep-ai-result-val.big { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 900; color: #16a34a; }
-
-  .ep-ai-items { background: #fff; border-radius: 10px; padding: 10px 12px; border: 1px solid #bbf7d0; margin-bottom: 12px; }
-  .ep-ai-items-title { font-size: 10px; font-weight: 700; color: #16a34a; text-transform: uppercase; margin-bottom: 8px; }
-  .ep-ai-item-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #f0fdf4; }
-  .ep-ai-item-row:last-child { border-bottom: none; }
-  .ep-ai-item-name { font-size: 12px; font-weight: 600; color: #166534; }
-  .ep-ai-item-price { font-size: 12px; font-weight: 800; color: #16a34a; }
-
-  .ep-ai-apply-btn {
-    width: 100%; padding: 13px; border: none; border-radius: 12px;
-    background: linear-gradient(135deg, #16a34a, #15803d);
-    color: #fff; font-family: 'Outfit', sans-serif;
-    font-size: 13px; font-weight: 800; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    box-shadow: 0 4px 14px rgba(22,163,74,.3);
-    transition: transform .15s, box-shadow .15s;
-  }
-  .ep-ai-apply-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(22,163,74,.4); }
-
-  .ep-ai-error {
-    background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 12px;
-    padding: 12px 14px; font-size: 12px; font-weight: 600; color: #dc2626;
-    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-  }
-
-  /* UPLOAD */
-  .ep-upload {
-    display: block; border: 2px dashed var(--indigo-md);
-    border-radius: 16px; padding: 18px 16px;
-    background: var(--indigo-lt); text-align: center;
-    cursor: pointer; transition: all .18s;
-  }
-  .ep-upload:hover { border-color:var(--indigo);background:#e0e7ff;transform:translateY(-2px);box-shadow:0 6px 18px rgba(79,70,229,.12); }
-  .ep-upload-icon  { font-size:32px;margin-bottom:6px; }
-  .ep-upload-title { font-size:13px;font-weight:800;color:var(--indigo);margin-bottom:3px; }
-  .ep-upload-sub   { font-size:11px;color:var(--ink3);font-weight:500; }
-  .ep-upload-preview { width:100%;border-radius:12px;margin-top:12px;object-fit:cover;max-height:190px;border:2px solid var(--indigo-md); }
-
-  /* PAID BY */
-  .ep-payer-scroll { display:flex;gap:12px;padding:4px 16px 20px;overflow-x:auto; }
-  .ep-payer-scroll::-webkit-scrollbar { display:none; }
-  .ep-payer { display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;flex-shrink:0; }
-  .ep-av {
-    width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    color:#fff;font-size:15px;font-weight:800;position:relative;
-    box-shadow:0 4px 14px rgba(0,0,0,.18);transition:transform .2s,box-shadow .2s;border:3px solid transparent;
-  }
-  .ep-payer:hover .ep-av { transform:translateY(-4px);box-shadow:0 8px 20px rgba(0,0,0,.22); }
-  .ep-av.sel { border-color:var(--indigo);box-shadow:0 0 0 3px rgba(79,70,229,.25),0 4px 14px rgba(0,0,0,.18); }
-  .ep-av-check {
-    position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;
-    background:var(--indigo);border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;
-    font-size:9px;color:#fff;font-weight:900;
-  }
-  .ep-av-name { font-size:10px;font-weight:700;color:var(--ink2);max-width:56px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-
-  /* SPLIT TABLE */
-  .ep-split-table { margin:0 16px 8px;border:1.5px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(79,70,229,.06); }
-  .ep-split-head { background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:12px 16px;display:flex;align-items:center;justify-content:space-between; }
-  .ep-split-head-title { font-size:12px;font-weight:800;color:rgba(255,255,255,.9);letter-spacing:.4px; }
-  .ep-split-head-badge { background:rgba(255,255,255,.2);border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff; }
-  .ep-split-row { display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);background:#fafafe;transition:background .15s; }
-  .ep-split-row:last-child { border-bottom:none; }
-  .ep-split-row:hover { background:var(--indigo-lt); }
-  .ep-split-av { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;flex-shrink:0; }
-  .ep-split-name  { font-size:13px;font-weight:700;color:var(--ink);flex:1; }
-  .ep-split-share { font-family:'Fraunces',serif;font-size:16px;font-weight:900;color:var(--indigo); }
-  .ep-split-tag { font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:#dcfce7;color:#16a34a;margin-left:6px; }
-  .ep-split-tag.payer { background:#ede9fe;color:var(--indigo); }
-
-  /* SUMMARY */
-  .ep-summary { margin:0 16px 8px;border-radius:18px;overflow:hidden;border:1.5px solid var(--border);box-shadow:0 4px 16px rgba(79,70,229,.08); }
-  .ep-summary-header { background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:14px 18px;display:flex;align-items:center;justify-content:space-between; }
-  .ep-summary-title { font-size:12px;font-weight:800;color:rgba(255,255,255,.85);letter-spacing:.4px; }
-  .ep-summary-badge { background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:#fff; }
-  .ep-summary-body { background:#fafafe;padding:14px 18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px; }
-  .ep-sum-stat { text-align:center; }
-  .ep-sum-val { font-family:'Fraunces',serif;font-size:18px;font-weight:900;color:var(--ink);margin-bottom:2px; }
-  .ep-sum-val.indigo { color:var(--indigo); }
-  .ep-sum-val.violet { color:var(--violet); }
-  .ep-sum-val.teal   { color:var(--teal); }
-  .ep-sum-lbl { font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px; }
-  .ep-summary-divider { height:1.5px;background:var(--border); }
-  .ep-summary-payer { background:var(--white);padding:12px 18px;display:flex;align-items:center;gap:12px; }
-  .ep-sum-av { width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;flex-shrink:0; }
-  .ep-sum-payer-label { font-size:11px;color:var(--ink3);font-weight:600; }
-  .ep-sum-payer-name  { font-size:14px;font-weight:800;color:var(--ink); }
-
-  /* CTA */
-  .ep-cta { position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;padding:14px 16px 26px;background:var(--white);border-top:1.5px solid var(--border); }
-  .ep-cta-btn {
-    width:100%;padding:17px 0;background:linear-gradient(135deg,#4f46e5,#7c3aed);
-    color:#fff;border:none;border-radius:16px;font-family:'Outfit',sans-serif;
-    font-size:15px;font-weight:800;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;gap:10px;
-    box-shadow:0 8px 24px rgba(79,70,229,.4);transition:transform .2s,box-shadow .2s;letter-spacing:.3px;
-  }
-  .ep-cta-btn:hover:not(:disabled) { transform:translateY(-2px);box-shadow:0 12px 32px rgba(79,70,229,.5); }
-  .ep-cta-btn:disabled { opacity:.6;cursor:not-allowed; }
+  .hero-input::placeholder { color: rgba(255,255,255,.35); }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 `;
 
-const CATS = [
-  { v:"Food",e:"🍽️" },{ v:"Travel",e:"✈️" },{ v:"Hotel",e:"🏨" },{ v:"Shopping",e:"🛍️" },
-  { v:"Fuel",e:"⛽" },{ v:"Entertainment",e:"🎉" },{ v:"Other",e:"💳" },{ v:"Drinks",e:"🍻" },
-];
-const COLORS = ["#7c3aed","#0ea5e9","#f59e0b","#f43f5e","#10b981","#ec4899","#6366f1","#0d9488"];
-
-// convert File/Blob to base64
-const fileToBase64 = (file) => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload  = () => resolve(reader.result.split(",")[1]);
-  reader.onerror = reject;
-  reader.readAsDataURL(file);
-});
-
 export default function ExpensePage() {
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
   const { groupId } = useParams();
 
   const [group,         setGroup]         = useState(null);
@@ -351,10 +99,9 @@ export default function ExpensePage() {
   const [billFile,      setBillFile]      = useState(null);
   const [loading,       setLoading]       = useState(false);
 
-  // AI scan state
-  const [scanning,    setScanning]    = useState(false);
-  const [aiResult,    setAiResult]    = useState(null);   // { title, amount, category, items[] }
-  const [aiError,     setAiError]     = useState("");
+  const [scanning,  setScanning]  = useState(false);
+  const [aiResult,  setAiResult]  = useState(null);
+  const [aiError,   setAiError]   = useState("");
   const scanInputRef = useRef();
 
   useEffect(() => { if (groupId) fetchGroup(); }, [groupId]);
@@ -362,26 +109,37 @@ export default function ExpensePage() {
   const fetchGroup = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(`https://settleji.onrender.com/api/groups/${groupId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.get(
+        `https://settleji.onrender.com/api/groups/${groupId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       const gd = data.group || data;
       setGroup(gd);
-      setMembers(gd.members?.map((m,i) => ({
-        _id:      m._id || m.user?._id,
-        name:     m.name || m.user?.name,
-        initials: (m.name||m.user?.name)?.split(" ")?.map(n=>n[0])?.join("")?.slice(0,2)?.toUpperCase(),
-        color:    COLORS[i % COLORS.length],
-      })) || []);
-    } catch(e) { console.log(e); alert("Failed to fetch group"); }
+      setMembers(
+        gd.members?.map((m, i) => ({
+          _id:      m._id || m.user?._id,
+          name:     m.name || m.user?.name,
+          initials: (m.name || m.user?.name)
+            ?.split(" ")?.map((n) => n[0])?.join("")?.slice(0, 2)?.toUpperCase(),
+          color: COLORS[i % COLORS.length],
+        })) || []
+      );
+    } catch (e) {
+      console.log(e);
+      alert("Failed to fetch group");
+    }
   };
 
   const handleBillUpload = (e) => {
     const f = e.target.files[0];
-    if (f) { setBillFile(f); setPreview(URL.createObjectURL(f)); setAiResult(null); setAiError(""); }
+    if (f) {
+      setBillFile(f);
+      setPreview(URL.createObjectURL(f));
+      setAiResult(null);
+      setAiError("");
+    }
   };
 
-  // ── GEMINI AI BILL SCAN ──
   const handleScanBill = async (e) => {
     const f = e.target.files[0];
     if (!f) return;
@@ -393,7 +151,7 @@ export default function ExpensePage() {
     setScanning(true);
 
     try {
-      const base64 = await fileToBase64(f);
+      const base64   = await fileToBase64(f);
       const mimeType = f.type || "image/jpeg";
 
       const prompt = `You are a bill/receipt reader. Analyze this image carefully.
@@ -417,11 +175,10 @@ Rules:
 - items array can be empty [] if no itemized list is visible
 - Return ONLY the JSON, nothing else`;
 
-      // ✅ use gemini-2.0-flash — latest stable free model
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
         {
-          method: "POST",
+          method:  "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents: [{
@@ -435,7 +192,6 @@ Rules:
         }
       );
 
-      // ✅ check HTTP status before parsing
       if (!res.ok) {
         const errText = await res.text();
         console.log("Gemini HTTP error:", res.status, errText);
@@ -445,22 +201,18 @@ Rules:
       const data = await res.json();
       console.log("Gemini full response:", JSON.stringify(data, null, 2));
 
-      // ✅ check for API-level errors
-      if (data.error) {
-        throw new Error(data.error.message || "Gemini API error");
-      }
+      if (data.error) throw new Error(data.error.message || "Gemini API error");
 
       const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
       console.log("Gemini raw text:", raw);
 
       if (!raw) throw new Error("Empty response from Gemini");
 
-      // strip markdown fences if present
-      const clean = raw.replace(/```json\n?|```\n?/g, "").trim();
+      const clean  = raw.replace(/```json\n?|```\n?/g, "").trim();
       const parsed = JSON.parse(clean);
 
       setAiResult(parsed);
-    } catch(e) {
+    } catch (e) {
       console.log("Gemini error:", e);
       const msg = e?.message || "";
       if (msg.includes("403") || msg.includes("API_KEY")) {
@@ -477,17 +229,18 @@ Rules:
     }
   };
 
-  // apply AI result to form fields
   const applyAiResult = () => {
     if (!aiResult) return;
     if (aiResult.title)    setTitle(aiResult.title);
     if (aiResult.amount)   setAmount(aiResult.amount);
     if (aiResult.category) {
-      const matched = CATS.find(c => c.v.toLowerCase() === aiResult.category.toLowerCase());
+      const matched = CATS.find(
+        (c) => c.v.toLowerCase() === aiResult.category.toLowerCase()
+      );
       if (matched) setCategory(matched.v);
     }
     if (aiResult.merchant && !aiResult.title) setTitle(aiResult.merchant);
-    setAiResult(null); // collapse after applying
+    setAiResult(null);
   };
 
   const handleAddExpense = async () => {
@@ -507,7 +260,7 @@ Rules:
         amount:   totalAmount,
         category,
         paidBy:   members[selectedPayer]?.name,
-        participants: members.map(m => ({
+        participants: members.map((m) => ({
           user:  m.name,
           share: parseFloat(sharePerPerson.toFixed(2)),
         })),
@@ -522,7 +275,7 @@ Rules:
 
       alert("Expense added successfully");
       navigate(`/trips/${groupId}`);
-    } catch(e) {
+    } catch (e) {
       console.log(e);
       alert(e?.response?.data?.message || "Failed to add expense");
     } finally {
@@ -534,89 +287,166 @@ Rules:
   const sharePerPerson = members.length > 0 ? totalAmount / members.length : 0;
   const payer          = members[selectedPayer];
 
+  /* ── Section label ── */
+  const SectionLabel = ({ children }) => (
+    <div className="font-outfit flex items-center gap-3 px-4 pt-4 pb-2.5 text-[10px] font-bold tracking-[1.1px] uppercase text-slate-400">
+      {children}
+      <span className="flex-1 h-[1.5px] bg-gradient-to-r from-indigo-100 to-transparent" />
+    </div>
+  );
+
   return (
     <>
-      <style>{css}</style>
-      <div className="ep-root">
-        <div className="ep-shell">
+      <style>{globalStyles}</style>
 
-          {/* HEADER */}
-          <div className="ep-header">
-            <button className="ep-back" onClick={() => navigate(-1)}>
+      <div className="font-outfit min-h-screen bg-[#f3f2ff] flex justify-center pb-28">
+        <div className="w-full max-w-[480px] bg-white relative anim-fadeUp">
+
+          {/* ── HEADER ── */}
+          <div className="flex items-center justify-between px-4 py-3.5 bg-white border-b-[1.5px] border-indigo-100 sticky top-0 z-30">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-9 h-9 rounded-xl bg-indigo-50 border-none flex items-center justify-center text-indigo-600 hover:bg-indigo-100 hover:-translate-x-0.5 transition-all"
+            >
               <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <span className="ep-header-title">Add Expense</span>
-            <button className="ep-menu-btn">⋮</button>
+            <span className="font-fraunces text-[17px] font-black text-slate-900 tracking-tight">
+              Add Expense
+            </span>
+            <button className="w-9 h-9 rounded-xl bg-indigo-50 border-none flex items-center justify-center text-slate-500 text-lg">
+              ⋮
+            </button>
           </div>
 
-          {/* GROUP BANNER */}
-          <div className="ep-group-banner">
-            <img src={group?.coverImage||"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=120&q=60"} alt="group" className="ep-group-img"/>
+          {/* ── GROUP BANNER ── */}
+          <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 border-b-[1.5px] border-indigo-100">
+            <img
+              src={
+                group?.coverImage ||
+                "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=120&q=60"
+              }
+              alt="group"
+              className="w-11 h-9 rounded-xl object-cover border-2 border-white shadow-md flex-shrink-0"
+            />
             <div>
-              <div className="ep-group-name">{group?.groupName||group?.name||"Trip"}</div>
-              <div className="ep-group-meta">
-                <span className="ep-group-chip">👥 {members.length} members</span>
-                {group?.category && <span className="ep-group-chip">🏷️ {group.category}</span>}
+              <div className="text-[13px] font-extrabold text-slate-900">
+                {group?.groupName || group?.name || "Trip"}
+              </div>
+              <div className="flex gap-2 mt-0.5 flex-wrap">
+                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 rounded-md px-2 py-0.5 tracking-wide">
+                  👥 {members.length} members
+                </span>
+                {group?.category && (
+                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 rounded-md px-2 py-0.5 tracking-wide">
+                    🏷️ {group.category}
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
-          {/* AMOUNT HERO */}
-          <div className="ep-hero">
-            <div className="ep-hero-orb1"/><div className="ep-hero-orb2"/><div className="ep-hero-orb3"/>
-            <div className="ep-hero-label">Total Amount</div>
-            <div className="ep-hero-amt-row">
-              <div className="ep-hero-amt-left">
-                <span className="ep-hero-rs">₹</span>
-                <input type="number" value={amount||""} onChange={e=>setAmount(Number(e.target.value))} className="ep-hero-input" placeholder="0"/>
+          {/* ── AMOUNT HERO ── */}
+          <div
+            className="relative overflow-hidden px-5 pt-6 pb-5"
+            style={{ background: "linear-gradient(145deg,#4338ca 0%,#6d28d9 50%,#7c3aed 100%)" }}
+          >
+            {/* orbs */}
+            <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-white/[.07] pointer-events-none" />
+            <div className="absolute -bottom-10 -left-5 w-32 h-32 rounded-full bg-white/[.05] pointer-events-none" />
+            <div className="absolute top-5 left-1/2 w-20 h-20 rounded-full bg-white/[.04] pointer-events-none" />
+
+            <p className="relative z-10 text-[10px] font-bold tracking-[1.4px] uppercase text-white/60 mb-1.5">
+              Total Amount
+            </p>
+
+            <div className="relative z-10 flex items-center justify-between mb-4">
+              <div className="flex items-baseline gap-1">
+                <span className="font-fraunces text-[28px] font-black text-white/75 leading-none">₹</span>
+                <input
+                  type="number"
+                  value={amount || ""}
+                  onChange={(e) => setAmount(Number(e.target.value))}
+                  placeholder="0"
+                  className="font-fraunces hero-input text-[52px] font-black text-white bg-transparent border-none outline-none w-52 tracking-[-3px] leading-none caret-white/80"
+                />
               </div>
-              <div className="ep-currency-pill">INR</div>
+              <div className="bg-white/15 border-[1.5px] border-white/28 rounded-xl px-4 py-2 text-xs font-extrabold text-white tracking-[.8px] backdrop-blur-md">
+                INR
+              </div>
             </div>
-            <div className="ep-quick-row">
-              {[100,200,500,1000,2000,5000].map(n => (
-                <button key={n} className="ep-quick-chip" onClick={()=>setAmount(a=>a+n)}>+₹{n}</button>
+
+            {/* quick chips */}
+            <div className="relative z-10 flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
+              {[100, 200, 500, 1000, 2000, 5000].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setAmount((a) => a + n)}
+                  className="flex-shrink-0 bg-white/14 border-[1.5px] border-white/22 rounded-full px-3.5 py-1.5 text-xs font-bold text-white/90 hover:bg-white/25 hover:-translate-y-0.5 transition-all backdrop-blur-md"
+                >
+                  +₹{n}
+                </button>
               ))}
             </div>
+
             {members.length > 0 && (
-              <div className="ep-per-strip">
+              <div className="relative z-10 flex items-center justify-between bg-white/10 border-[1.5px] border-white/18 rounded-xl px-4 py-2.5 mt-3.5 backdrop-blur-md">
                 <div>
-                  <div className="ep-per-label">Split equally among {members.length} people</div>
-                  <div className="ep-per-sub">Each person pays their share</div>
+                  <p className="text-[11px] font-semibold text-white/70">
+                    Split equally among {members.length} people
+                  </p>
+                  <p className="text-[10px] text-white/55 mt-0.5">Each person pays their share</p>
                 </div>
-                <div className="ep-per-val">₹{Math.round(sharePerPerson)} / person</div>
+                <span className="font-fraunces text-lg font-black text-white">
+                  ₹{Math.round(sharePerPerson)} / person
+                </span>
               </div>
             )}
           </div>
 
-          {/* ── AI SCAN SECTION ── */}
-          <div className="ep-sec">Scan Bill with AI</div>
-          <div className="ep-scan-wrap">
+          {/* ── AI SCAN ── */}
+          <SectionLabel>Scan Bill with AI</SectionLabel>
+          <div className="mx-4 mb-1">
 
-            {/* scan button */}
             <button
-              className="ep-scan-btn"
               disabled={scanning}
               onClick={() => scanInputRef.current?.click()}
+              className="w-full py-4 rounded-2xl border-none flex items-center justify-center gap-2.5 text-sm font-extrabold text-white mb-2.5 transition-all disabled:opacity-65 disabled:cursor-not-allowed hover:-translate-y-0.5"
+              style={{
+                background: "linear-gradient(135deg,#0d9488,#2dd4bf)",
+                boxShadow: "0 6px 20px rgba(13,148,136,.35)",
+              }}
             >
               {scanning ? (
-                <><div className="ep-scan-spinner"/><span>Reading bill...</span></>
+                <>
+                  <div className="scan-spinner" />
+                  <span>Reading bill...</span>
+                </>
               ) : (
-                <><span style={{fontSize:20}}>🤖</span><span>Scan Bill / Payment Screenshot</span></>
+                <>
+                  <span className="text-xl">🤖</span>
+                  <span>Scan Bill / Payment Screenshot</span>
+                </>
               )}
             </button>
-            <input ref={scanInputRef} type="file" accept="image/*" hidden onChange={handleScanBill}/>
+            <input
+              ref={scanInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleScanBill}
+            />
 
-            {/* scanning overlay on preview */}
+            {/* preview with scan overlay */}
             {preview && (
-              <div className="ep-scan-preview-wrap">
-                <img src={preview} alt="bill" className="ep-scan-preview-img"/>
+              <div className="relative rounded-2xl overflow-hidden border-2 border-indigo-200 mb-2.5">
+                <img src={preview} alt="bill" className="w-full block max-h-52 object-cover" />
                 {scanning && (
-                  <div className="ep-scan-overlay">
-                    <div className="ep-scan-line"/>
-                    <div className="ep-scan-spinner"/>
-                    <div className="ep-scan-status">Analysing with Gemini AI...</div>
+                  <div className="absolute inset-0 bg-indigo-600/55 flex flex-col items-center justify-center gap-3">
+                    <div className="scan-line" />
+                    <div className="scan-spinner" />
+                    <p className="text-[13px] font-bold text-white">Analysing with Gemini AI...</p>
                   </div>
                 )}
               </div>
@@ -624,190 +454,293 @@ Rules:
 
             {/* error */}
             {aiError && (
-              <div className="ep-ai-error">⚠️ {aiError}</div>
+              <div className="bg-red-50 border-[1.5px] border-red-200 rounded-xl px-3.5 py-3 text-xs font-semibold text-red-600 flex items-center gap-2 mb-2">
+                ⚠️ {aiError}
+              </div>
             )}
 
             {/* AI result card */}
             {aiResult && (
-              <div className="ep-ai-result">
-                <div className="ep-ai-result-title">
+              <div
+                className="anim-popIn rounded-2xl p-4 mb-2.5 border-2 border-green-300"
+                style={{ background: "linear-gradient(135deg,#f0fdf4,#dcfce7)" }}
+              >
+                <div className="flex items-center gap-2 text-xs font-extrabold text-green-600 tracking-wide uppercase mb-3">
                   <span>✅</span> Bill Detected
                   {aiResult.confidence && (
-                    <span style={{marginLeft:"auto",fontSize:10,background:"#bbf7d0",padding:"2px 8px",borderRadius:6,color:"#16a34a"}}>
+                    <span className="ml-auto text-[10px] bg-green-200 px-2 py-0.5 rounded-md text-green-600">
                       {aiResult.confidence} confidence
                     </span>
                   )}
                 </div>
 
-                <div className="ep-ai-result-grid">
-                  <div className="ep-ai-result-item" style={{gridColumn:"1/-1"}}>
-                    <div className="ep-ai-result-label">Total Amount</div>
-                    <div className="ep-ai-result-val big">₹{aiResult.amount}</div>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {/* full-width amount */}
+                  <div className="col-span-2 bg-white rounded-xl p-2.5 border border-green-200">
+                    <p className="text-[10px] font-bold text-green-300 uppercase tracking-wide mb-1">Total Amount</p>
+                    <p className="font-fraunces text-[22px] font-black text-green-500">₹{aiResult.amount}</p>
                   </div>
-                  <div className="ep-ai-result-item">
-                    <div className="ep-ai-result-label">Description</div>
-                    <div className="ep-ai-result-val">{aiResult.title}</div>
+                  <div className="bg-white rounded-xl p-2.5 border border-green-200">
+                    <p className="text-[10px] font-bold text-green-300 uppercase tracking-wide mb-1">Description</p>
+                    <p className="text-sm font-extrabold text-green-900">{aiResult.title}</p>
                   </div>
-                  <div className="ep-ai-result-item">
-                    <div className="ep-ai-result-label">Category</div>
-                    <div className="ep-ai-result-val">
-                      {CATS.find(c=>c.v.toLowerCase()===aiResult.category?.toLowerCase())?.e} {aiResult.category}
-                    </div>
+                  <div className="bg-white rounded-xl p-2.5 border border-green-200">
+                    <p className="text-[10px] font-bold text-green-300 uppercase tracking-wide mb-1">Category</p>
+                    <p className="text-sm font-extrabold text-green-900">
+                      {CATS.find((c) => c.v.toLowerCase() === aiResult.category?.toLowerCase())?.e}{" "}
+                      {aiResult.category}
+                    </p>
                   </div>
                   {aiResult.merchant && (
-                    <div className="ep-ai-result-item" style={{gridColumn:"1/-1"}}>
-                      <div className="ep-ai-result-label">Merchant</div>
-                      <div className="ep-ai-result-val">{aiResult.merchant}</div>
+                    <div className="col-span-2 bg-white rounded-xl p-2.5 border border-green-200">
+                      <p className="text-[10px] font-bold text-green-300 uppercase tracking-wide mb-1">Merchant</p>
+                      <p className="text-sm font-extrabold text-green-900">{aiResult.merchant}</p>
                     </div>
                   )}
                 </div>
 
-                {/* itemized list */}
                 {aiResult.items?.length > 0 && (
-                  <div className="ep-ai-items">
-                    <div className="ep-ai-items-title">📋 Items Detected</div>
-                    {aiResult.items.map((item,i) => (
-                      <div key={i} className="ep-ai-item-row">
-                        <span className="ep-ai-item-name">{item.name}</span>
-                        <span className="ep-ai-item-price">₹{item.price}</span>
+                  <div className="bg-white rounded-xl p-2.5 border border-green-200 mb-3">
+                    <p className="text-[10px] font-bold text-green-600 uppercase mb-2">📋 Items Detected</p>
+                    {aiResult.items.map((item, i) => (
+                      <div
+                        key={i}
+                        className="flex justify-between items-center py-1 border-b border-green-50 last:border-0"
+                      >
+                        <span className="text-xs font-semibold text-green-800">{item.name}</span>
+                        <span className="text-xs font-extrabold text-green-500">₹{item.price}</span>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* per-person preview */}
                 {members.length > 0 && (
-                  <div style={{background:"#fff",borderRadius:10,padding:"10px 12px",border:"1px solid #bbf7d0",marginBottom:12}}>
-                    <div style={{fontSize:10,fontWeight:700,color:"#16a34a",textTransform:"uppercase",marginBottom:4}}>Split Preview</div>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:12,fontWeight:600,color:"#166534"}}>₹{aiResult.amount} ÷ {members.length} people</span>
-                      <span style={{fontFamily:"'Fraunces',serif",fontSize:18,fontWeight:900,color:"#16a34a"}}>= ₹{Math.round(aiResult.amount/members.length)} each</span>
+                  <div className="bg-white rounded-xl p-2.5 border border-green-200 mb-3">
+                    <p className="text-[10px] font-bold text-green-600 uppercase mb-1">Split Preview</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-semibold text-green-800">
+                        ₹{aiResult.amount} ÷ {members.length} people
+                      </span>
+                      <span className="font-fraunces text-lg font-black text-green-500">
+                        = ₹{Math.round(aiResult.amount / members.length)} each
+                      </span>
                     </div>
                   </div>
                 )}
 
-                <button className="ep-ai-apply-btn" onClick={applyAiResult}>
+                <button
+                  onClick={applyAiResult}
+                  className="w-full py-3 border-none rounded-xl text-sm font-extrabold text-white flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
+                  style={{
+                    background: "linear-gradient(135deg,#16a34a,#15803d)",
+                    boxShadow: "0 4px 14px rgba(22,163,74,.3)",
+                  }}
+                >
                   ✨ Apply to Expense Form
                 </button>
               </div>
             )}
           </div>
 
-          {/* EXPENSE DETAILS */}
-          <div className="ep-sec">Expense Details</div>
-          <div className="ep-form">
-            <div className="ep-field-wrap">
-              <span className="ep-field-icon">✏️</span>
-              <input className="ep-input" placeholder="What's this expense for?" value={title} onChange={e=>setTitle(e.target.value)}/>
+          {/* ── EXPENSE DETAILS ── */}
+          <SectionLabel>Expense Details</SectionLabel>
+          <div className="px-4">
+            <div className="relative mb-3">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base pointer-events-none">✏️</span>
+              <input
+                className="w-full border-[1.5px] border-indigo-100 rounded-xl py-3 pl-10 pr-3.5 outline-none bg-slate-50 font-outfit text-[13px] font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-medium focus:border-indigo-500 focus:shadow-[0_0_0_3px_rgba(79,70,229,.1)] focus:bg-white transition-all"
+                placeholder="What's this expense for?"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
             </div>
-            <div className="ep-field-wrap">
-              <span className="ep-field-icon">📝</span>
-              <textarea className="ep-textarea" style={{paddingTop:13}} placeholder="Add a note or description..." value={notes} onChange={e=>setNotes(e.target.value)}/>
+            <div className="relative mb-3">
+              <span className="absolute left-3.5 top-4 text-base pointer-events-none">📝</span>
+              <textarea
+                className="w-full border-[1.5px] border-indigo-100 rounded-xl py-3 pl-10 pr-3.5 outline-none bg-slate-50 font-outfit text-[13px] font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-medium focus:border-indigo-500 focus:shadow-[0_0_0_3px_rgba(79,70,229,.1)] focus:bg-white transition-all resize-none min-h-[80px] leading-relaxed"
+                placeholder="Add a note or description..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
             </div>
           </div>
 
-          {/* CATEGORY */}
-          <div className="ep-sec">Category</div>
-          <div className="ep-cat-grid">
-            {CATS.map(cat => (
-              <div key={cat.v} className={`ep-cat-item${category===cat.v?" sel":""}`} onClick={()=>setCategory(cat.v)}>
-                <span className="ci">{cat.e}</span>{cat.v}
-              </div>
+          {/* ── CATEGORY ── */}
+          <SectionLabel>Category</SectionLabel>
+          <div className="grid grid-cols-4 gap-2 px-4 mb-1">
+            {CATS.map((cat) => (
+              <button
+                key={cat.v}
+                onClick={() => setCategory(cat.v)}
+                className={`flex flex-col items-center gap-1.5 py-3 px-1.5 border-[1.5px] rounded-2xl font-outfit text-[10px] font-bold transition-all ${
+                  category === cat.v
+                    ? "border-indigo-500 bg-indigo-50 text-indigo-600 shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
+                    : "border-indigo-100 bg-slate-50 text-slate-500 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-600 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(79,70,229,.15)]"
+                }`}
+              >
+                <span className={`text-[22px] ${category === cat.v ? "anim-pop" : ""}`}>{cat.e}</span>
+                {cat.v}
+              </button>
             ))}
           </div>
 
-          {/* RECEIPT (manual upload fallback) */}
-          <div className="ep-sec">Receipt</div>
-          <label className="ep-upload">
+          {/* ── RECEIPT ── */}
+          <SectionLabel>Receipt</SectionLabel>
+          <label className="block mx-4 border-2 border-dashed border-indigo-200 rounded-2xl p-4 bg-indigo-50 text-center cursor-pointer hover:border-indigo-500 hover:bg-blue-100 hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(79,70,229,.12)] transition-all">
             {preview ? (
-              <img src={preview} alt="receipt" className="ep-upload-preview"/>
+              <img
+                src={preview}
+                alt="receipt"
+                className="w-full rounded-xl mt-3 object-cover max-h-48 border-2 border-indigo-200"
+              />
             ) : (
               <>
-                <div className="ep-upload-icon">🧾</div>
-                <div className="ep-upload-title">Tap to upload bill manually</div>
-                <div className="ep-upload-sub">JPG, PNG supported</div>
+                <div className="text-[32px] mb-1.5">🧾</div>
+                <p className="text-[13px] font-extrabold text-indigo-600 mb-0.5">Tap to upload bill manually</p>
+                <p className="text-[11px] text-slate-400 font-medium">JPG, PNG supported</p>
               </>
             )}
-            <input type="file" hidden onChange={handleBillUpload}/>
+            <input type="file" hidden onChange={handleBillUpload} />
           </label>
 
-          {/* PAID BY */}
-          <div className="ep-sec">Paid By</div>
-          <div className="ep-payer-scroll">
-            {members.map((m,i) => (
-              <div key={m._id||i} className="ep-payer" onClick={()=>setSelectedPayer(i)}>
-                <div className={`ep-av${selectedPayer===i?" sel":""}`} style={{background:m.color}}>
+          {/* ── PAID BY ── */}
+          <SectionLabel>Paid By</SectionLabel>
+          <div className="flex gap-3 px-4 pb-5 overflow-x-auto scrollbar-hide">
+            {members.map((m, i) => (
+              <div
+                key={m._id || i}
+                className="flex flex-col items-center gap-1.5 cursor-pointer flex-shrink-0"
+                onClick={() => setSelectedPayer(i)}
+              >
+                <div
+                  className={`w-[52px] h-[52px] rounded-full flex items-center justify-center text-white text-[15px] font-extrabold relative shadow-lg transition-all hover:-translate-y-1 ${
+                    selectedPayer === i
+                      ? "border-[3px] border-indigo-500 shadow-[0_0_0_3px_rgba(79,70,229,.25),0_4px_14px_rgba(0,0,0,.18)]"
+                      : "border-[3px] border-transparent"
+                  }`}
+                  style={{ background: m.color }}
+                >
                   {m.initials}
-                  {selectedPayer===i && <div className="ep-av-check">✓</div>}
+                  {selectedPayer === i && (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-indigo-600 border-[2.5px] border-white flex items-center justify-center text-[9px] text-white font-black">
+                      ✓
+                    </div>
+                  )}
                 </div>
-                <span className="ep-av-name">{m.name}</span>
+                <span className="text-[10px] font-bold text-slate-500 max-w-[56px] text-center truncate">
+                  {m.name}
+                </span>
               </div>
             ))}
           </div>
 
-          {/* SPLIT TABLE */}
+          {/* ── SPLIT TABLE ── */}
           {members.length > 0 && (
             <>
-              <div className="ep-sec">Split Breakdown</div>
-              <div className="ep-split-table">
-                <div className="ep-split-head">
-                  <span className="ep-split-head-title">EQUAL SPLIT</span>
-                  <span className="ep-split-head-badge">₹{Math.round(sharePerPerson)} each</span>
+              <SectionLabel>Split Breakdown</SectionLabel>
+              <div className="mx-4 mb-2 border-[1.5px] border-indigo-100 rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(79,70,229,.06)]">
+                <div
+                  className="px-4 py-3 flex items-center justify-between"
+                  style={{ background: "linear-gradient(135deg,#4f46e5,#7c3aed)" }}
+                >
+                  <span className="text-xs font-extrabold text-white/90 tracking-wide">EQUAL SPLIT</span>
+                  <span className="bg-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white">
+                    ₹{Math.round(sharePerPerson)} each
+                  </span>
                 </div>
-                {members.map((m,i) => (
-                  <div key={m._id||i} className="ep-split-row">
-                    <div className="ep-split-av" style={{background:m.color}}>{m.initials}</div>
-                    <span className="ep-split-name">{m.name}</span>
-                    <span className="ep-split-share">₹{Math.round(sharePerPerson)}</span>
-                    {i===selectedPayer
-                      ? <span className="ep-split-tag payer">paid</span>
-                      : <span className="ep-split-tag">owes</span>
-                    }
+                {members.map((m, i) => (
+                  <div
+                    key={m._id || i}
+                    className="flex items-center gap-3 px-4 py-2.5 border-b border-indigo-50 last:border-0 bg-slate-50 hover:bg-indigo-50 transition-colors"
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-extrabold flex-shrink-0"
+                      style={{ background: m.color }}
+                    >
+                      {m.initials}
+                    </div>
+                    <span className="text-[13px] font-bold text-slate-900 flex-1">{m.name}</span>
+                    <span className="font-fraunces text-base font-black text-indigo-600">
+                      ₹{Math.round(sharePerPerson)}
+                    </span>
+                    {i === selectedPayer ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-600 ml-1.5">
+                        paid
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-100 text-green-600 ml-1.5">
+                        owes
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
             </>
           )}
 
-          {/* SUMMARY */}
+          {/* ── SUMMARY ── */}
           {members.length > 0 && payer && (
-            <div className="ep-summary" style={{marginTop:12}}>
-              <div className="ep-summary-header">
-                <span className="ep-summary-title">EXPENSE SUMMARY</span>
-                <span className="ep-summary-badge">{members.length} people</span>
+            <div className="mx-4 mt-3 mb-2 rounded-[18px] overflow-hidden border-[1.5px] border-indigo-100 shadow-[0_4px_16px_rgba(79,70,229,.08)]">
+              <div
+                className="px-4 py-3.5 flex items-center justify-between"
+                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+              >
+                <span className="text-xs font-extrabold text-white/85 tracking-wide">EXPENSE SUMMARY</span>
+                <span className="bg-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white">
+                  {members.length} people
+                </span>
               </div>
-              <div className="ep-summary-body">
-                <div className="ep-sum-stat">
-                  <div className="ep-sum-val indigo">₹{totalAmount.toLocaleString()}</div>
-                  <div className="ep-sum-lbl">Total</div>
+              <div className="bg-slate-50 px-4 py-3.5 grid grid-cols-3 gap-2">
+                <div className="text-center">
+                  <p className="font-fraunces text-lg font-black text-indigo-600 mb-0.5">
+                    ₹{totalAmount.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Total</p>
                 </div>
-                <div className="ep-sum-stat">
-                  <div className="ep-sum-val violet">₹{Math.round(sharePerPerson)}</div>
-                  <div className="ep-sum-lbl">Each</div>
+                <div className="text-center">
+                  <p className="font-fraunces text-lg font-black text-violet-600 mb-0.5">
+                    ₹{Math.round(sharePerPerson)}
+                  </p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Each</p>
                 </div>
-                <div className="ep-sum-stat">
-                  <div className="ep-sum-val teal">{members.length}</div>
-                  <div className="ep-sum-lbl">Members</div>
+                <div className="text-center">
+                  <p className="font-fraunces text-lg font-black text-teal-600 mb-0.5">{members.length}</p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Members</p>
                 </div>
               </div>
-              <div className="ep-summary-divider"/>
-              <div className="ep-summary-payer">
-                <div className="ep-sum-av" style={{background:payer.color}}>{payer.initials}</div>
+              <div className="h-[1.5px] bg-indigo-100" />
+              <div className="bg-white px-4 py-3 flex items-center gap-3">
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-extrabold flex-shrink-0"
+                  style={{ background: payer.color }}
+                >
+                  {payer.initials}
+                </div>
                 <div>
-                  <div className="ep-sum-payer-label">Paid by</div>
-                  <div className="ep-sum-payer-name">{payer.name}</div>
+                  <p className="text-[11px] text-slate-400 font-semibold">Paid by</p>
+                  <p className="text-sm font-extrabold text-slate-900">{payer.name}</p>
                 </div>
-                <div style={{marginLeft:"auto",textAlign:"right"}}>
-                  <div className="ep-sum-payer-label">Category</div>
-                  <div className="ep-sum-payer-name">{CATS.find(c=>c.v===category)?.e} {category}</div>
+                <div className="ml-auto text-right">
+                  <p className="text-[11px] text-slate-400 font-semibold">Category</p>
+                  <p className="text-sm font-extrabold text-slate-900">
+                    {CATS.find((c) => c.v === category)?.e} {category}
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* CTA */}
-          <div className="ep-cta">
-            <button className="ep-cta-btn" onClick={handleAddExpense} disabled={loading}>
+          {/* ── CTA ── */}
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4 pt-3.5 pb-6 bg-white border-t-[1.5px] border-indigo-100">
+            <button
+              onClick={handleAddExpense}
+              disabled={loading}
+              className="w-full py-[17px] rounded-2xl border-none text-white font-outfit text-[15px] font-extrabold flex items-center justify-center gap-2.5 tracking-wide transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-0.5"
+              style={{
+                background: "linear-gradient(135deg,#4f46e5,#7c3aed)",
+                boxShadow: "0 8px 24px rgba(79,70,229,.4)",
+              }}
+            >
               {loading ? "⏳ Adding..." : "➤ Add Expense"}
             </button>
           </div>

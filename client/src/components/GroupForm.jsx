@@ -1,331 +1,6 @@
 import { useState, useRef } from "react";
 import axios from "axios";
 
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Fraunces:ital,wght@0,700;0,900;1,700&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --cream:    #FDFAF5; --cream2:   #F5EFE6; --white:    #FFFFFF;
-    --ink:      #1C1917; --ink2:     #57534E; --ink3:     #A8A29E;
-    --border:   rgba(28,25,23,0.09);
-    --coral:    #F26B5B; --coral-bg: #FEF0EE; --coral-bd: #FBCDC8;
-    --teal:     #0D9488; --teal-bg:  #F0FDFA; --teal-bd:  #99F6E4;
-    --amber:    #D97706; --amber-bg: #FFFBEB;
-    --purple:   #7C3AED; --purple-bg:#F5F3FF; --purple-bd:#DDD6FE;
-    --shadow-sm: 0 2px 8px rgba(28,25,23,0.06);
-    --shadow-md: 0 8px 28px rgba(28,25,23,0.09);
-    --r-sm: 10px; --r-md: 16px; --r-lg: 22px; --r-xl: 28px;
-  }
-
-  body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
-  .page { min-height: 100vh; background: var(--cream); position: relative; }
-
-  .topnav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 40px; background: var(--white);
-    border-bottom: 1.5px solid var(--border);
-    position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px);
-  }
-  .back-btn {
-    display: flex; align-items: center; gap: 8px;
-    background: none; border: none; font-family: 'Outfit', sans-serif;
-    font-size: 14px; font-weight: 700; color: var(--ink2); cursor: pointer;
-    padding: 0; transition: color 0.15s;
-  }
-  .back-btn:hover { color: var(--coral); }
-  .nav-brand { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 900; color: var(--ink); letter-spacing: -0.3px; }
-  .nav-actions { display: flex; gap: 10px; }
-  .btn-cancel {
-    background: var(--white); border: 1.5px solid var(--border); border-radius: 999px;
-    padding: 9px 22px; font-size: 13px; font-weight: 700; font-family: 'Outfit', sans-serif;
-    cursor: pointer; color: var(--ink2); transition: border-color 0.15s, color 0.15s;
-  }
-  .btn-cancel:hover { border-color: var(--coral); color: var(--coral); }
-  .btn-create {
-    background: var(--ink); border: none; border-radius: 999px; padding: 9px 22px;
-    font-size: 13px; font-weight: 700; font-family: 'Outfit', sans-serif; cursor: pointer;
-    color: #fff; display: flex; align-items: center; gap: 7px;
-    transition: background 0.15s, transform 0.2s; box-shadow: 0 4px 14px rgba(28,25,23,0.18);
-  }
-  .btn-create:hover { background: #2C2724; transform: translateY(-1px); }
-  .btn-create:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-
-  .hero-banner {
-    background: var(--white); border-bottom: 1.5px solid var(--border);
-    padding: 36px 48px 32px; display: flex; align-items: center; gap: 28px;
-    position: relative; overflow: hidden;
-  }
-  .hero-banner::before {
-    content: ''; position: absolute; right: -60px; top: -80px;
-    width: 280px; height: 280px; border-radius: 50%;
-    background: radial-gradient(circle, #FBCDC8 0%, transparent 70%); opacity: .6;
-  }
-  .hero-banner::after {
-    content: ''; position: absolute; left: 36%; bottom: -60px;
-    width: 200px; height: 200px; border-radius: 50%;
-    background: radial-gradient(circle, #99F6E4 0%, transparent 70%); opacity: .5;
-  }
-  .hero-icon-wrap {
-    width: 64px; height: 64px; background: var(--cream); border: 1.5px solid var(--border);
-    border-radius: 20px; display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; font-size: 28px; position: relative; z-index: 1; box-shadow: var(--shadow-sm);
-  }
-  .hero-text { position: relative; z-index: 1; }
-  .hero-text h2 { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 900; color: var(--ink); letter-spacing: -0.5px; line-height: 1.1; }
-  .hero-text p  { font-size: 14px; color: var(--ink3); margin-top: 6px; font-weight: 500; }
-  .hero-text p span { color: var(--coral); font-weight: 700; }
-  .hero-badges { display: flex; gap: 10px; margin-top: 14px; position: relative; z-index: 1; }
-  .hero-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 999px; border: 1.5px solid; }
-  .hero-badge.coral { background: var(--coral-bg); color: var(--coral); border-color: var(--coral-bd); }
-  .hero-badge.teal  { background: var(--teal-bg);  color: var(--teal);  border-color: var(--teal-bd); }
-  .hero-badge.amber { background: var(--amber-bg); color: var(--amber); border-color: #FDE68A; }
-  .hero-illustration { position: absolute; right: 56px; top: 50%; transform: translateY(-50%); font-size: 72px; opacity: .15; user-select: none; z-index: 0; }
-
-  .form-area {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
-    padding: 36px 48px 48px; max-width: 1200px; margin: 0 auto;
-  }
-
-  .field-block { margin-bottom: 24px; }
-  .field-label {
-    font-size: 12px; font-weight: 800; color: var(--ink2); margin-bottom: 9px;
-    display: flex; align-items: center; gap: 4px; letter-spacing: .6px; text-transform: uppercase;
-  }
-  .required { color: var(--coral); }
-
-  .input-shell {
-    background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-md);
-    padding: 13px 16px; display: flex; align-items: center; gap: 10px;
-    transition: border-color .18s, box-shadow .18s; box-shadow: var(--shadow-sm);
-  }
-  .input-shell:focus-within { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(242,107,91,0.1); }
-  .input-shell input, .input-shell select {
-    border: none; outline: none; font-family: 'Outfit', sans-serif;
-    font-size: 14px; font-weight: 500; color: var(--ink); width: 100%; background: transparent;
-  }
-  .input-shell input::placeholder { color: var(--ink3); }
-  .input-shell select { font-weight: 600; appearance: none; cursor: pointer; }
-  .input-shell .prefix { font-size: 16px; font-weight: 800; color: var(--coral); flex-shrink: 0; }
-  .chevron-icon { flex-shrink: 0; color: var(--ink3); pointer-events: none; }
-
-  .textarea-shell {
-    background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-md);
-    padding: 13px 16px; transition: border-color .18s, box-shadow .18s; box-shadow: var(--shadow-sm);
-  }
-  .textarea-shell:focus-within { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(242,107,91,0.1); }
-  .textarea-shell textarea {
-    border: none; outline: none; font-family: 'Outfit', sans-serif;
-    font-size: 14px; font-weight: 500; color: var(--ink); width: 100%;
-    resize: none; background: transparent; min-height: 88px; line-height: 1.65;
-  }
-  .textarea-shell textarea::placeholder { color: var(--ink3); }
-  .char-count { text-align: right; font-size: 11px; color: var(--ink3); font-weight: 600; margin-top: 6px; }
-
-  .category-grid { display: flex; gap: 10px; flex-wrap: wrap; }
-  .cat-btn {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    padding: 14px 16px; border: 1.5px solid var(--border); border-radius: var(--r-md);
-    background: var(--white); cursor: pointer; font-family: 'Outfit', sans-serif;
-    font-size: 12px; font-weight: 700; color: var(--ink2); transition: all 0.18s;
-    min-width: 72px; box-shadow: var(--shadow-sm);
-  }
-  .cat-btn span.cat-icon { font-size: 22px; }
-  .cat-btn:hover { border-color: var(--coral); color: var(--coral); background: var(--coral-bg); transform: translateY(-2px); }
-  .cat-btn.active { border-color: var(--coral); background: var(--coral-bg); color: var(--coral); box-shadow: 0 4px 14px rgba(242,107,91,0.18); }
-
-  .split-grid { display: flex; gap: 10px; }
-  .split-btn {
-    flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
-    padding: 12px 10px; border: 1.5px solid var(--border); border-radius: var(--r-md);
-    background: var(--white); cursor: pointer; font-family: 'Outfit', sans-serif;
-    font-size: 13px; font-weight: 700; color: var(--ink2); transition: all 0.18s; box-shadow: var(--shadow-sm);
-  }
-  .split-btn:hover  { border-color: var(--teal); color: var(--teal); background: var(--teal-bg); }
-  .split-btn.active { border-color: var(--teal); background: var(--teal-bg); color: var(--teal); box-shadow: 0 4px 14px rgba(13,148,136,0.15); }
-  .info-box {
-    display: flex; align-items: center; gap: 9px; background: var(--teal-bg);
-    border: 1.5px solid var(--teal-bd); border-radius: var(--r-sm); padding: 10px 14px;
-    font-size: 12.5px; color: var(--teal); font-weight: 600; margin-top: 10px;
-  }
-
-  .right-col { display: flex; flex-direction: column; gap: 0; }
-
-  .cover-box {
-    border: 1.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden;
-    background: var(--white); display: flex; align-items: stretch;
-    min-height: 180px; box-shadow: var(--shadow-sm); margin-bottom: 24px;
-  }
-  .cover-upload-area {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 8px; padding: 28px 20px; cursor: pointer; transition: background .2s;
-  }
-  .cover-upload-area:hover { background: var(--cream); }
-  .upload-icon-circle {
-    width: 50px; height: 50px; border-radius: 50%; background: var(--cream2);
-    border: 1.5px solid var(--border); display: flex; align-items: center;
-    justify-content: center; font-size: 20px; margin-bottom: 4px;
-  }
-  .cover-upload-area p    { font-size: 13px; font-weight: 700; color: var(--ink); text-align: center; }
-  .cover-upload-area span { font-size: 11px; color: var(--ink3); font-weight: 500; }
-  .btn-choose {
-    background: var(--ink); color: #fff; border: none; border-radius: 999px;
-    padding: 8px 20px; font-size: 12px; font-weight: 700; font-family: 'Outfit', sans-serif;
-    cursor: pointer; margin-top: 4px; transition: background 0.15s;
-  }
-  .btn-choose:hover { background: #2C2724; }
-  .cover-preview { width: 190px; flex-shrink: 0; overflow: hidden; position: relative; }
-  .cover-preview img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
-  .cover-preview:hover img { transform: scale(1.05); }
-  .cover-preview-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(253,250,245,.3), transparent); }
-
-  /* ── MEMBERS ── */
-  .member-input-row { display: flex; gap: 8px; margin-bottom: 14px; }
-  .member-input-wrap {
-    flex: 1; display: flex; align-items: center; gap: 10px;
-    border: 1.5px solid var(--border); border-radius: var(--r-md);
-    padding: 12px 16px; background: var(--white);
-    transition: border-color .18s, box-shadow .18s; box-shadow: var(--shadow-sm);
-  }
-  .member-input-wrap:focus-within { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
-  .member-input-wrap input {
-    border: none; outline: none; font-family: 'Outfit', sans-serif;
-    font-size: 14px; font-weight: 500; color: var(--ink); width: 100%; background: transparent;
-  }
-  .member-input-wrap input::placeholder { color: var(--ink3); }
-  .btn-add {
-    background: var(--purple-bg); color: var(--purple); border: 1.5px solid var(--purple-bd);
-    border-radius: var(--r-md); padding: 12px 22px; font-size: 14px; font-weight: 800;
-    font-family: 'Outfit', sans-serif; cursor: pointer; transition: background .15s, color .15s; white-space: nowrap;
-  }
-  .btn-add:hover { background: var(--purple); color: white; border-color: var(--purple); }
-
-  .selected-label { font-size: 11px; color: var(--ink3); font-weight: 700; margin-bottom: 10px; letter-spacing: .5px; text-transform: uppercase; }
-
-  /* ── MEMBER CARD (expanded with UPI) ── */
-  .member-card {
-    background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-md);
-    padding: 14px 16px; margin-bottom: 10px; box-shadow: var(--shadow-sm);
-    transition: border-color .15s;
-  }
-  .member-card:hover { border-color: var(--purple-bd); }
-
-  .member-card-top {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
-  }
-  .member-avatar-placeholder {
-    width: 36px; height: 36px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0;
-  }
-  .member-card-name { font-size: 14px; font-weight: 800; color: var(--ink); flex: 1; }
-  .chip-remove {
-    background: var(--cream2); border: none; border-radius: 50%;
-    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; font-size: 11px; color: var(--ink2); padding: 0;
-    transition: background .15s, color .15s; line-height: 1;
-  }
-  .chip-remove:hover { background: var(--coral); color: white; }
-
-  .upi-input-wrap {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--cream); border: 1.5px solid var(--border);
-    border-radius: 10px; padding: 9px 12px;
-    transition: border-color .15s, box-shadow .15s;
-  }
-  .upi-input-wrap:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,148,136,0.1); }
-  .upi-icon { font-size: 14px; flex-shrink: 0; }
-  .upi-input-wrap input {
-    border: none; outline: none; font-family: 'Outfit', sans-serif;
-    font-size: 12px; font-weight: 600; color: var(--ink); width: 100%; background: transparent;
-  }
-  .upi-input-wrap input::placeholder { color: var(--ink3); font-weight: 500; }
-  .upi-badge {
-    font-size: 10px; font-weight: 700; color: var(--teal);
-    background: var(--teal-bg); border-radius: 6px; padding: 2px 7px; white-space: nowrap;
-  }
-
-  .dates-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .date-input-wrap {
-    display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--border);
-    border-radius: var(--r-md); padding: 12px 16px; background: var(--white);
-    transition: border-color .18s, box-shadow .18s; box-shadow: var(--shadow-sm);
-  }
-  .date-input-wrap:focus-within { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(217,119,6,0.1); }
-  .date-input-wrap input {
-    border: none; outline: none; font-family: 'Outfit', sans-serif;
-    font-size: 13.5px; font-weight: 500; color: var(--ink3); width: 100%; background: transparent; cursor: pointer;
-  }
-  .date-input-wrap input:valid { color: var(--ink); }
-
-  .hint-box {
-    display: flex; align-items: flex-start; gap: 14px; background: var(--white);
-    border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 18px 22px;
-    box-shadow: var(--shadow-sm); margin: 0 48px 40px;
-  }
-  .hint-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
-  .hint-text strong { font-size: 14px; font-weight: 800; color: var(--ink); }
-  .hint-text p { font-size: 13px; color: var(--ink3); font-weight: 500; margin-top: 3px; line-height: 1.6; }
-  .hint-text p span { color: var(--coral); font-weight: 700; }
-
-  .form-section {
-    background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-xl);
-    padding: 28px; box-shadow: var(--shadow-sm); margin-bottom: 24px;
-  }
-  .section-heading {
-    font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; color: var(--ink);
-    margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
-    padding-bottom: 14px; border-bottom: 1.5px solid var(--border);
-  }
-  .section-heading-icon {
-    width: 32px; height: 32px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
-  }
-  .icon-coral  { background: var(--coral-bg); }
-  .icon-teal   { background: var(--teal-bg); }
-  .icon-purple { background: var(--purple-bg); }
-  .icon-amber  { background: var(--amber-bg); }
-
-  .bottom-bar {
-    display: flex; justify-content: flex-end; align-items: center; gap: 12px;
-    background: var(--white); border-top: 1.5px solid var(--border);
-    padding: 18px 48px; position: sticky; bottom: 0; z-index: 50;
-  }
-  .bar-hint { flex: 1; font-size: 13px; color: var(--ink3); font-weight: 600; display: flex; align-items: center; gap: 8px; }
-  .btn-cancel-lg {
-    background: var(--white); border: 1.5px solid var(--border); border-radius: 999px;
-    padding: 13px 34px; font-size: 14px; font-weight: 700; font-family: 'Outfit', sans-serif;
-    cursor: pointer; color: var(--ink2); transition: border-color .15s, color .15s;
-  }
-  .btn-cancel-lg:hover { border-color: var(--coral); color: var(--coral); }
-  .btn-create-lg {
-    background: var(--ink); border: none; border-radius: 999px; padding: 13px 36px;
-    font-size: 14px; font-weight: 800; font-family: 'Outfit', sans-serif; cursor: pointer; color: #fff;
-    display: flex; align-items: center; gap: 9px; transition: background .15s, transform .2s;
-    box-shadow: 0 6px 20px rgba(28,25,23,0.2);
-  }
-  .btn-create-lg:hover { background: #2C2724; transform: translateY(-2px); }
-  .btn-create-lg:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-
-  @media(max-width: 900px) {
-    .form-area { grid-template-columns: 1fr; padding: 24px 24px 40px; }
-    .hero-banner { padding: 28px 28px; }
-    .hero-illustration { display: none; }
-    .bottom-bar { padding: 16px 24px; }
-    .hint-box { margin: 0 24px 32px; }
-    .bar-hint { display: none; }
-  }
-  @media(max-width: 600px) {
-    .topnav { padding: 12px 18px; }
-    .nav-brand { display: none; }
-    .hero-badges { flex-wrap: wrap; }
-    .form-section { padding: 20px; }
-    .split-grid { flex-direction: column; }
-    .dates-row { grid-template-columns: 1fr; }
-  }
-`;
-
 const CATEGORIES = [
   { id: "trip",    label: "Trip",    icon: "🧳" },
   { id: "flat",    label: "Flat",    icon: "🏠" },
@@ -362,14 +37,13 @@ export default function GroupForm() {
       name,
       initials,
       color:  AVATAR_COLORS[prev.length % AVATAR_COLORS.length],
-      upiId:  "",  // ✅ UPI ID field
+      upiId:  "",
     }]);
     setMemberInput("");
   };
 
   const removeMember = (id) => setMembers(prev => prev.filter(m => m.id !== id));
 
-  // ✅ update UPI ID for a specific member
   const updateUpiId = (id, upiId) => {
     setMembers(prev => prev.map(m => m.id === id ? { ...m, upiId } : m));
   };
@@ -396,7 +70,6 @@ export default function GroupForm() {
       if (startDate) formData.append("startDate", startDate);
       if (endDate)   formData.append("endDate",   endDate);
 
-      // ✅ include upiId per member
       formData.append("members", JSON.stringify(
         members.map(m => ({
           name:     m.name,
@@ -427,242 +100,363 @@ export default function GroupForm() {
     }
   };
 
+  /* ── shared input ring classes ── */
+  const inputShell = "flex items-center gap-2.5 bg-white border border-stone-200 rounded-2xl px-4 py-3.5 shadow-sm focus-within:border-[#F26B5B] focus-within:ring-2 focus-within:ring-[#F26B5B]/10 transition-all";
+  const inputBase  = "border-none outline-none font-medium text-[14px] text-stone-800 w-full bg-transparent placeholder-stone-400";
+
   return (
-    <>
-      <style>{styles}</style>
-      <div className="page">
+    <div className="min-h-screen bg-[#FDFAF5] font-[Outfit,sans-serif] text-stone-900">
 
-        {/* TOP NAV */}
-        <div className="topnav">
-          <button className="back-btn">
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Back to Groups
+      {/* ── Google Fonts ── */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Fraunces:ital,wght@0,700;0,900;1,700&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        .font-fraunces { font-family: 'Fraunces', serif; }
+        input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0; width: 100%; position: absolute; left: 0; cursor: pointer; }
+        select { -webkit-appearance: none; appearance: none; }
+      `}</style>
+
+      {/* ══ TOP NAV ══ */}
+      <nav className="flex items-center justify-between px-5 sm:px-10 py-3.5 bg-white border-b border-stone-100 sticky top-0 z-50 backdrop-blur-md">
+        <button className="flex items-center gap-2 bg-transparent border-none font-bold text-sm text-stone-500 cursor-pointer hover:text-[#F26B5B] transition-colors">
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Back to Groups
+        </button>
+
+        <span className="font-fraunces text-lg font-black tracking-tight hidden sm:block">✈️ SettleJi</span>
+
+        <div className="flex gap-2.5">
+          <button className="hidden sm:block bg-white border border-stone-200 rounded-full px-5 py-2 text-[13px] font-bold text-stone-500 hover:border-[#F26B5B] hover:text-[#F26B5B] transition-all cursor-pointer">
+            Cancel
           </button>
-          <div className="nav-brand">✈️ SettleJi</div>
-          <div className="nav-actions">
-            <button className="btn-cancel">Cancel</button>
-            <button className="btn-create" onClick={handleCreateGroup} disabled={loading}>
-              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" />
-              </svg>
-              {loading ? "Creating..." : "Create Group"}
-            </button>
+          <button
+            onClick={handleCreateGroup}
+            disabled={loading}
+            className="bg-stone-900 border-none rounded-full px-5 py-2 text-[13px] font-bold text-white flex items-center gap-1.5 shadow-[0_4px_14px_rgba(28,25,23,0.18)] hover:bg-stone-800 hover:-translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 cursor-pointer"
+          >
+            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" />
+            </svg>
+            {loading ? "Creating..." : "Create Group"}
+          </button>
+        </div>
+      </nav>
+
+      {/* ══ HERO BANNER ══ */}
+      <div className="bg-white border-b border-stone-100 px-6 sm:px-12 py-8 sm:py-9 flex items-center gap-7 relative overflow-hidden">
+        {/* decorative blobs */}
+        <div className="absolute -right-16 -top-20 w-64 h-64 rounded-full bg-[radial-gradient(circle,#FBCDC8_0%,transparent_70%)] opacity-60 pointer-events-none" />
+        <div className="absolute left-[36%] -bottom-16 w-48 h-48 rounded-full bg-[radial-gradient(circle,#99F6E4_0%,transparent_70%)] opacity-50 pointer-events-none" />
+
+        <div className="w-16 h-16 bg-[#FDFAF5] border border-stone-200 rounded-2xl flex items-center justify-center flex-shrink-0 text-3xl shadow-sm relative z-10">
+          👥
+        </div>
+
+        <div className="relative z-10">
+          <h2 className="font-fraunces text-2xl sm:text-3xl font-black text-stone-900 tracking-tight leading-tight">
+            Create New Group
+          </h2>
+          <p className="text-sm text-stone-400 font-medium mt-1.5">
+            Set up a group and <span className="text-[#F26B5B] font-bold">manage shared expenses</span> effortlessly.
+          </p>
+          <div className="flex flex-wrap gap-2.5 mt-3.5">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full bg-[#FEF0EE] text-[#F26B5B] border border-[#FBCDC8]">🧾 AI Receipt Split</span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full bg-[#F0FDFA] text-[#0D9488] border border-[#99F6E4]">⚡ Real-Time Sync</span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]">💸 UPI Settlement</span>
           </div>
         </div>
 
-        {/* HERO */}
-        <div className="hero-banner">
-          <div className="hero-icon-wrap">👥</div>
-          <div className="hero-text">
-            <h2>Create New Group</h2>
-            <p>Set up a group and <span>manage shared expenses</span> effortlessly.</p>
-            <div className="hero-badges">
-              <span className="hero-badge coral">🧾 AI Receipt Split</span>
-              <span className="hero-badge teal">⚡ Real-Time Sync</span>
-              <span className="hero-badge amber">💸 UPI Settlement</span>
-            </div>
-          </div>
-          <div className="hero-illustration">👨‍👩‍👧‍👦</div>
+        <div className="absolute right-14 top-1/2 -translate-y-1/2 text-7xl opacity-15 select-none z-0 hidden lg:block">
+          👨‍👩‍👧‍👦
         </div>
+      </div>
 
-        {/* FORM */}
-        <div className="form-area">
+      {/* ══ FORM GRID ══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-6 sm:px-12 py-9 max-w-[1200px] mx-auto">
 
-          {/* LEFT */}
-          <div>
-            <div className="form-section">
-              <div className="section-heading">
-                <div className="section-heading-icon icon-coral">📝</div>
-                Group Details
-              </div>
-              <div className="field-block">
-                <div className="field-label">Group Name <span className="required">*</span></div>
-                <div className="input-shell">
-                  <input placeholder="e.g. Goa Trip 2026" value={groupName} onChange={e => setGroupName(e.target.value)} />
-                </div>
-              </div>
-              <div className="field-block">
-                <div className="field-label">Description</div>
-                <div className="textarea-shell">
-                  <textarea placeholder="Write a short description..." value={description} maxLength={200} onChange={e => setDescription(e.target.value)} />
-                  <div className="char-count">{description.length}/200</div>
-                </div>
-              </div>
-              <div className="field-block" style={{marginBottom:0}}>
-                <div className="field-label">Category <span className="required">*</span></div>
-                <div className="category-grid">
-                  {CATEGORIES.map(cat => (
-                    <button type="button" key={cat.id} className={`cat-btn${category === cat.id ? " active" : ""}`} onClick={() => setCategory(cat.id)}>
-                      <span className="cat-icon">{cat.icon}</span>
-                      {cat.label}
-                    </button>
-                  ))}
-                </div>
+        {/* ── LEFT COLUMN ── */}
+        <div>
+
+          {/* Group Details Card */}
+          <div className="bg-white border border-stone-200 rounded-3xl p-7 shadow-sm mb-6">
+            <div className="flex items-center gap-2.5 font-fraunces text-base font-bold text-stone-900 mb-5 pb-3.5 border-b border-stone-100">
+              <span className="w-8 h-8 rounded-xl bg-[#FEF0EE] flex items-center justify-center text-base flex-shrink-0">📝</span>
+              Group Details
+            </div>
+
+            {/* Group Name */}
+            <div className="mb-6">
+              <label className="block text-[11px] font-extrabold text-stone-500 mb-2.5 uppercase tracking-widest">
+                Group Name <span className="text-[#F26B5B]">*</span>
+              </label>
+              <div className={inputShell}>
+                <input className={inputBase} placeholder="e.g. Goa Trip 2026" value={groupName} onChange={e => setGroupName(e.target.value)} />
               </div>
             </div>
 
-            <div className="form-section">
-              <div className="section-heading">
-                <div className="section-heading-icon icon-teal">⚙️</div>
-                Settings
-              </div>
-              <div className="field-block">
-                <div className="field-label">Currency</div>
-                <div className="input-shell">
-                  <span className="prefix">₹</span>
-                  <select value={currency} onChange={e => setCurrency(e.target.value)}>
-                    <option value="INR">Indian Rupee (INR)</option>
-                    <option value="USD">US Dollar (USD)</option>
-                    <option value="EUR">Euro (EUR)</option>
-                    <option value="GBP">British Pound (GBP)</option>
-                  </select>
-                  <svg className="chevron-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </div>
-              <div className="field-block" style={{marginBottom:0}}>
-                <div className="field-label">Default Split Type</div>
-                <div className="split-grid">
-                  {[{id:"equal",icon:"⚖️",label:"Equal Split"},{id:"percentage",icon:"%",label:"Percentage"},{id:"custom",icon:"✏️",label:"Custom"}].map(s => (
-                    <button type="button" key={s.id} className={`split-btn${splitType === s.id ? " active" : ""}`} onClick={() => setSplitType(s.id)}>
-                      <span>{s.icon}</span> {s.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="info-box"><span>ℹ️</span> You can change the split type for individual expenses later.</div>
+            {/* Description */}
+            <div className="mb-6">
+              <label className="block text-[11px] font-extrabold text-stone-500 mb-2.5 uppercase tracking-widest">
+                Description
+              </label>
+              <div className="bg-white border border-stone-200 rounded-2xl px-4 py-3.5 shadow-sm focus-within:border-[#F26B5B] focus-within:ring-2 focus-within:ring-[#F26B5B]/10 transition-all">
+                <textarea
+                  className="border-none outline-none font-medium text-[14px] text-stone-800 w-full bg-transparent resize-none min-h-[88px] leading-relaxed placeholder-stone-400"
+                  placeholder="Write a short description..."
+                  value={description}
+                  maxLength={200}
+                  onChange={e => setDescription(e.target.value)}
+                />
+                <div className="text-right text-[11px] text-stone-400 font-semibold mt-1.5">{description.length}/200</div>
               </div>
             </div>
-          </div>
 
-          {/* RIGHT */}
-          <div className="right-col">
-
-            {/* Cover Image */}
-            <div className="form-section">
-              <div className="section-heading">
-                <div className="section-heading-icon icon-amber">🖼️</div>
-                Cover Image
-              </div>
-              <div className="cover-box">
-                <div className="cover-upload-area" onClick={() => fileRef.current?.click()}>
-                  <div className="upload-icon-circle">📷</div>
-                  <p>Upload Cover Image</p>
-                  <span>PNG, JPG up to 10MB</span>
-                  <button type="button" className="btn-choose" onClick={e => { e.stopPropagation(); fileRef.current?.click(); }}>
-                    Choose Image
+            {/* Category */}
+            <div>
+              <label className="block text-[11px] font-extrabold text-stone-500 mb-2.5 uppercase tracking-widest">
+                Category <span className="text-[#F26B5B]">*</span>
+              </label>
+              <div className="flex gap-2.5 flex-wrap">
+                {CATEGORIES.map(cat => (
+                  <button
+                    type="button"
+                    key={cat.id}
+                    onClick={() => setCategory(cat.id)}
+                    className={`flex flex-col items-center gap-1.5 px-4 py-3.5 border rounded-2xl text-[12px] font-bold min-w-[68px] shadow-sm transition-all cursor-pointer
+                      ${category === cat.id
+                        ? "border-[#F26B5B] bg-[#FEF0EE] text-[#F26B5B] shadow-[0_4px_14px_rgba(242,107,91,0.18)]"
+                        : "border-stone-200 bg-white text-stone-500 hover:border-[#F26B5B] hover:text-[#F26B5B] hover:bg-[#FEF0EE] hover:-translate-y-0.5"
+                      }`}
+                  >
+                    <span className="text-[22px]">{cat.icon}</span>
+                    {cat.label}
                   </button>
-                  <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleImageChange} />
-                </div>
-                {coverPreview && (
-                  <div className="cover-preview">
-                    <img src={coverPreview} alt="Cover preview" />
-                    <div className="cover-preview-overlay" />
-                  </div>
-                )}
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Settings Card */}
+          <div className="bg-white border border-stone-200 rounded-3xl p-7 shadow-sm">
+            <div className="flex items-center gap-2.5 font-fraunces text-base font-bold text-stone-900 mb-5 pb-3.5 border-b border-stone-100">
+              <span className="w-8 h-8 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-base flex-shrink-0">⚙️</span>
+              Settings
+            </div>
+
+            {/* Currency */}
+            <div className="mb-6">
+              <label className="block text-[11px] font-extrabold text-stone-500 mb-2.5 uppercase tracking-widest">Currency</label>
+              <div className={inputShell}>
+                <span className="text-base font-extrabold text-[#F26B5B] flex-shrink-0">₹</span>
+                <select className={inputBase + " font-semibold cursor-pointer"} value={currency} onChange={e => setCurrency(e.target.value)}>
+                  <option value="INR">Indian Rupee (INR)</option>
+                  <option value="USD">US Dollar (USD)</option>
+                  <option value="EUR">Euro (EUR)</option>
+                  <option value="GBP">British Pound (GBP)</option>
+                </select>
+                <svg className="flex-shrink-0 text-stone-400 pointer-events-none" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
               </div>
             </div>
 
-            {/* Members — with UPI ID */}
-            <div className="form-section">
-              <div className="section-heading">
-                <div className="section-heading-icon icon-purple">👤</div>
-                Add Members <span className="required" style={{marginLeft:2}}>*</span>
+            {/* Split Type */}
+            <div>
+              <label className="block text-[11px] font-extrabold text-stone-500 mb-2.5 uppercase tracking-widest">Default Split Type</label>
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                {[{id:"equal",icon:"⚖️",label:"Equal Split"},{id:"percentage",icon:"%",label:"Percentage"},{id:"custom",icon:"✏️",label:"Custom"}].map(s => (
+                  <button
+                    type="button"
+                    key={s.id}
+                    onClick={() => setSplitType(s.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 border rounded-2xl text-[13px] font-bold shadow-sm transition-all cursor-pointer
+                      ${splitType === s.id
+                        ? "border-[#0D9488] bg-[#F0FDFA] text-[#0D9488] shadow-[0_4px_14px_rgba(13,148,136,0.15)]"
+                        : "border-stone-200 bg-white text-stone-500 hover:border-[#0D9488] hover:text-[#0D9488] hover:bg-[#F0FDFA]"
+                      }`}
+                  >
+                    <span>{s.icon}</span> {s.label}
+                  </button>
+                ))}
               </div>
+              <div className="flex items-center gap-2.5 bg-[#F0FDFA] border border-[#99F6E4] rounded-xl px-3.5 py-2.5 text-[12.5px] text-[#0D9488] font-semibold mt-2.5">
+                <span>ℹ️</span> You can change the split type for individual expenses later.
+              </div>
+            </div>
+          </div>
 
-              <div className="member-input-row">
-                <div className="member-input-wrap">
-                  <input
-                    placeholder="Enter member name"
-                    value={memberInput}
-                    onChange={e => setMemberInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && addMember()}
-                  />
+        </div>
+
+        {/* ── RIGHT COLUMN ── */}
+        <div className="flex flex-col gap-0">
+
+          {/* Cover Image Card */}
+          <div className="bg-white border border-stone-200 rounded-3xl p-7 shadow-sm mb-6">
+            <div className="flex items-center gap-2.5 font-fraunces text-base font-bold text-stone-900 mb-5 pb-3.5 border-b border-stone-100">
+              <span className="w-8 h-8 rounded-xl bg-[#FFFBEB] flex items-center justify-center text-base flex-shrink-0">🖼️</span>
+              Cover Image
+            </div>
+            <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white flex items-stretch min-h-[180px] shadow-sm">
+              <div
+                className="flex-1 flex flex-col items-center justify-center gap-2 px-5 py-7 cursor-pointer hover:bg-[#FDFAF5] transition-colors"
+                onClick={() => fileRef.current?.click()}
+              >
+                <div className="w-12 h-12 rounded-full bg-[#F5EFE6] border border-stone-200 flex items-center justify-center text-xl mb-1">📷</div>
+                <p className="text-[13px] font-bold text-stone-800 text-center">Upload Cover Image</p>
+                <span className="text-[11px] text-stone-400 font-medium">PNG, JPG up to 10MB</span>
+                <button
+                  type="button"
+                  className="bg-stone-900 text-white border-none rounded-full px-5 py-2 text-xs font-bold mt-1 hover:bg-stone-800 transition-colors cursor-pointer"
+                  onClick={e => { e.stopPropagation(); fileRef.current?.click(); }}
+                >
+                  Choose Image
+                </button>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              </div>
+              {coverPreview && (
+                <div className="w-48 flex-shrink-0 overflow-hidden relative group">
+                  <img src={coverPreview} alt="Cover preview" className="w-full h-full object-cover block transition-transform duration-300 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/30 to-transparent" />
                 </div>
-                <button type="button" className="btn-add" onClick={addMember}>+ Add</button>
+              )}
+            </div>
+          </div>
+
+          {/* Members Card */}
+          <div className="bg-white border border-stone-200 rounded-3xl p-7 shadow-sm mb-6">
+            <div className="flex items-center gap-2.5 font-fraunces text-base font-bold text-stone-900 mb-5 pb-3.5 border-b border-stone-100">
+              <span className="w-8 h-8 rounded-xl bg-[#F5F3FF] flex items-center justify-center text-base flex-shrink-0">👤</span>
+              Add Members <span className="text-[#F26B5B] ml-0.5">*</span>
+            </div>
+
+            {/* Member Input Row */}
+            <div className="flex gap-2 mb-3.5">
+              <div className="flex-1 flex items-center gap-2.5 border border-stone-200 rounded-2xl px-4 py-3 bg-white shadow-sm focus-within:border-[#7C3AED] focus-within:ring-2 focus-within:ring-[#7C3AED]/10 transition-all">
+                <input
+                  className="border-none outline-none font-medium text-[14px] text-stone-800 w-full bg-transparent placeholder-stone-400"
+                  placeholder="Enter member name"
+                  value={memberInput}
+                  onChange={e => setMemberInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addMember()}
+                />
               </div>
+              <button
+                type="button"
+                onClick={addMember}
+                className="bg-[#F5F3FF] text-[#7C3AED] border border-[#DDD6FE] rounded-2xl px-5 py-3 text-[14px] font-extrabold whitespace-nowrap hover:bg-[#7C3AED] hover:text-white hover:border-[#7C3AED] transition-all cursor-pointer"
+              >
+                + Add
+              </button>
+            </div>
 
-              <div className="selected-label">Members ({members.length}) — add UPI ID for QR payments</div>
+            <div className="text-[11px] text-stone-400 font-bold mb-2.5 uppercase tracking-wider">
+              Members ({members.length}) — add UPI ID for QR payments
+            </div>
 
-              {/* ✅ Member cards with UPI input */}
-              {members.map(m => (
-                <div className="member-card" key={m.id}>
-                  <div className="member-card-top">
-                    <div className="member-avatar-placeholder" style={{background: m.color}}>
-                      {m.initials}
-                    </div>
-                    <span className="member-card-name">{m.name}</span>
-                    <button className="chip-remove" onClick={() => removeMember(m.id)}>✕</button>
+            {/* Member Cards */}
+            {members.map(m => (
+              <div
+                key={m.id}
+                className="bg-white border border-stone-200 rounded-2xl px-4 py-3.5 mb-2.5 shadow-sm hover:border-[#DDD6FE] transition-colors"
+              >
+                {/* Top row */}
+                <div className="flex items-center gap-3 mb-2.5">
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold text-white flex-shrink-0"
+                    style={{ background: m.color }}
+                  >
+                    {m.initials}
                   </div>
-                  {/* UPI ID input */}
-                  <div className="upi-input-wrap">
-                    <span className="upi-icon">📱</span>
+                  <span className="text-[14px] font-extrabold text-stone-900 flex-1">{m.name}</span>
+                  <button
+                    className="bg-[#F5EFE6] border-none rounded-full w-6 h-6 flex items-center justify-center cursor-pointer text-[11px] text-stone-500 hover:bg-[#F26B5B] hover:text-white transition-all leading-none p-0"
+                    onClick={() => removeMember(m.id)}
+                  >
+                    ✕
+                  </button>
+                </div>
+                {/* UPI Input */}
+                <div className="flex items-center gap-2 bg-[#FDFAF5] border border-stone-200 rounded-xl px-3 py-2.5 focus-within:border-[#0D9488] focus-within:ring-2 focus-within:ring-[#0D9488]/10 transition-all">
+                  <span className="text-sm flex-shrink-0">📱</span>
+                  <input
+                    className="border-none outline-none font-semibold text-[12px] text-stone-800 w-full bg-transparent placeholder-stone-400"
+                    placeholder="UPI ID e.g. name@upi (optional)"
+                    value={m.upiId}
+                    onChange={e => updateUpiId(m.id, e.target.value)}
+                  />
+                  {m.upiId && (
+                    <span className="text-[10px] font-bold text-[#0D9488] bg-[#F0FDFA] rounded-md px-1.5 py-0.5 whitespace-nowrap">
+                      ✓ UPI
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Dates Card */}
+          <div className="bg-white border border-stone-200 rounded-3xl p-7 shadow-sm">
+            <div className="flex items-center gap-2.5 font-fraunces text-base font-bold text-stone-900 mb-5 pb-3.5 border-b border-stone-100">
+              <span className="w-8 h-8 rounded-xl bg-[#FFFBEB] flex items-center justify-center text-base flex-shrink-0">📅</span>
+              Trip Dates
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {[
+                { label: "Start Date", value: startDate, setter: setStartDate },
+                { label: "End Date",   value: endDate,   setter: setEndDate   },
+              ].map(({ label, value, setter }) => (
+                <div key={label}>
+                  <label className="block text-[11px] font-extrabold text-stone-500 mb-2.5 uppercase tracking-widest">{label}</label>
+                  <div className="relative flex items-center gap-2 border border-stone-200 rounded-2xl px-4 py-3 bg-white shadow-sm focus-within:border-[#D97706] focus-within:ring-2 focus-within:ring-[#D97706]/10 transition-all">
+                    <svg className="flex-shrink-0" width="15" height="15" fill="none" stroke="#A8A29E" strokeWidth="2" viewBox="0 0 24 24">
+                      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
                     <input
-                      placeholder="UPI ID e.g. name@upi (optional)"
-                      value={m.upiId}
-                      onChange={e => updateUpiId(m.id, e.target.value)}
+                      type="date"
+                      className="border-none outline-none font-medium text-[13.5px] text-stone-400 [&:valid]:text-stone-900 w-full bg-transparent cursor-pointer"
+                      value={value}
+                      onChange={e => setter(e.target.value)}
                     />
-                    {m.upiId && <span className="upi-badge">✓ UPI</span>}
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* Dates */}
-            <div className="form-section">
-              <div className="section-heading">
-                <div className="section-heading-icon icon-amber">📅</div>
-                Trip Dates
-              </div>
-              <div className="dates-row">
-                <div>
-                  <div className="field-label">Start Date</div>
-                  <div className="date-input-wrap">
-                    <svg width="15" height="15" fill="none" stroke="#A8A29E" strokeWidth="2" viewBox="0 0 24 24">
-                      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-                  </div>
-                </div>
-                <div>
-                  <div className="field-label">End Date</div>
-                  <div className="date-input-wrap">
-                    <svg width="15" height="15" fill="none" stroke="#A8A29E" strokeWidth="2" viewBox="0 0 24 24">
-                      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
-        </div>
 
-        {/* HINT */}
-        <div className="hint-box">
-          <div className="hint-icon">💡</div>
-          <div className="hint-text">
-            <strong>Pro Tip</strong>
-            <p>Add each member's <span>UPI ID</span> so others can scan their QR code and pay directly from the expense overview.</p>
-          </div>
         </div>
-
-        {/* BOTTOM BAR */}
-        <div className="bottom-bar">
-          <div className="bar-hint">
-            <span style={{fontSize:16}}>👥</span>
-            {members.length > 0 ? `${members.length} member${members.length > 1 ? "s" : ""} added` : "No members added yet"}
-          </div>
-          <button className="btn-cancel-lg">Cancel</button>
-          <button className="btn-create-lg" onClick={handleCreateGroup} disabled={loading}>
-            {loading ? "Creating..." : "🚀 Create Group"}
-          </button>
-        </div>
-
       </div>
-    </>
+
+      {/* ══ HINT BOX ══ */}
+      <div className="flex items-start gap-3.5 bg-white border border-stone-200 rounded-3xl px-5 sm:px-6 py-5 shadow-sm mx-6 sm:mx-12 mb-10">
+        <span className="text-[22px] flex-shrink-0 mt-0.5">💡</span>
+        <div>
+          <strong className="block text-[14px] font-extrabold text-stone-900">Pro Tip</strong>
+          <p className="text-[13px] text-stone-400 font-medium mt-1 leading-relaxed">
+            Add each member's <span className="text-[#F26B5B] font-bold">UPI ID</span> so others can scan their QR code and pay directly from the expense overview.
+          </p>
+        </div>
+      </div>
+
+      {/* ══ BOTTOM BAR ══ */}
+      <div className="flex justify-end sm:justify-between items-center gap-3 bg-white border-t border-stone-100 px-6 sm:px-12 py-4 sticky bottom-0 z-50">
+        <div className="hidden sm:flex items-center gap-2 flex-1 text-[13px] text-stone-400 font-semibold">
+          <span className="text-base">👥</span>
+          {members.length > 0 ? `${members.length} member${members.length > 1 ? "s" : ""} added` : "No members added yet"}
+        </div>
+        <button className="bg-white border border-stone-200 rounded-full px-8 py-3 text-[14px] font-bold text-stone-500 hover:border-[#F26B5B] hover:text-[#F26B5B] transition-all cursor-pointer">
+          Cancel
+        </button>
+        <button
+          onClick={handleCreateGroup}
+          disabled={loading}
+          className="bg-stone-900 border-none rounded-full px-9 py-3 text-[14px] font-extrabold text-white flex items-center gap-2 shadow-[0_6px_20px_rgba(28,25,23,0.2)] hover:bg-stone-800 hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 cursor-pointer"
+        >
+          {loading ? "Creating..." : "🚀 Create Group"}
+        </button>
+      </div>
+
+    </div>
   );
 }
